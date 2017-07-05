@@ -99,7 +99,7 @@ void CClientTcp::OnReceive(int nErrorCode)
 	m_ltPackage.push_back(strPack);
 
 	// Send to client
-	if (!m_ResponseFun._Empty())
+	if (m_ResponseFun)
 		m_ResponseFun(m_pData, m_nLen);
 
 	CSocket::OnReceive(nErrorCode);
