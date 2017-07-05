@@ -21,7 +21,7 @@ void CPlayer::OnInitPlayer()
 		- player id
 		- total money the player have at first time
 		- how many players in the game
-		- bet unit money (the bet money must be integer multiple of unti money every time)
+		- bet unit money (the bet money must be integer multiple of unit money every time)
 	*/
 }
 
