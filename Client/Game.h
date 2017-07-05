@@ -1,7 +1,7 @@
 #pragma once
 
 class CGameMgr;
-class CGame
+class CGame : public IGame
 {
 private:
 	CGameMgr *m_Mgr;
@@ -16,10 +16,18 @@ public:
 	void SetID(int id){ m_nGameID = id; }
 	void SetBankerID(int bankerID){ m_nBankerID = bankerID; }
 	void SetPoker(byte *data){ memcpy(m_Poker, data, 5); }
+	void SetBetMoney(int money){ m_nBetMoney = money; }
 	void AddWinID(int id){ m_ltWinID.push_back(id); }
 
-	int GetGameID(){ return m_nGameID; }
-	int GetBankerID(){ return m_nBankerID; }
+	virtual int GetGameID(){ return m_nGameID; }
+	virtual int GetBankerID(){ return m_nBankerID; }
+	virtual int GetBetMoney(){ return m_nBetMoney; }
+	virtual byte* GetPoker(int& count){ count = 5;  return m_Poker; }
+	virtual CString GetPokersHide();
+	virtual CString GetPokersOpen();
+	virtual CString GetPokersAll();
+	virtual CString GetResultInfo(){ return m_strResultInfo; }
+	virtual std::list<int> GetWinners(){ return m_ltWinID; }
 
 public:
 	CGame(CGameMgr *mgr, int id);

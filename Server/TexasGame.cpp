@@ -209,7 +209,8 @@ void CTexasGame::SendBet()
 	ASSERT(m_nCurClientID >= 0);
 	auto pClient = m_Mgr->m_vtClient[m_nCurClientID];
 	auto client = (CTexasPokerClient *)pClient.get();
-	auto prevClient = (CTexasPokerClient *)m_Mgr->m_vtClient[GetPrevID(m_nCurClientID)].get();
+	int nPrevID = GetPrevID(m_nCurClientID);
+	auto prevClient = (CTexasPokerClient *)m_Mgr->m_vtClient[nPrevID].get();
 
 	int nMax = GetMaxBetMoney();
 	int nTal = m_nTotalMoney;
@@ -272,7 +273,6 @@ void CTexasGame::SendResult(bool bShow)
 		std::shared_ptr<IClient> pClient = m_Mgr->m_vtClient[i];
 		CTexasPokerClient *client = (CTexasPokerClient *)pClient.get();
 		client->SendResultRequest(mpWinner.find(i) != mpWinner.end(), nWinMoney, strAllBet);
-		client->InitOneGame();
 	}
 	m_nGameState = PS_GIVE_RESULT_WAIT;
 }

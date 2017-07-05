@@ -49,15 +49,26 @@ int CGame::GetBetMoney(int nMaxBet, int nPrevBet, int nMyBet, int nTotal, std::m
 	ASSERT(nRet >= 0);
 	if (nRet < 0)	nRet = -1;
 	m_nBetMoney = nPrevBet;
-	m_Mgr->AddBetMoney(nRet);
-	if (m_Mgr->GetBetMoney() > nMaxBet)
-	{
-		ASSERT(FALSE);
-	}
+	ASSERT(m_nBetMoney > nMaxBet);
 	return nRet;
 }
 
 void CGame::SetResultInfo(CString strInfo)
 {
 	m_strResultInfo = strInfo;
+}
+
+CString CGame::GetPokersHide()
+{
+	return CPokerResult::GetPokerString(m_Poker, 2);
+}
+
+CString CGame::GetPokersOpen()
+{
+	return CPokerResult::GetPokerString(&m_Poker[2], 3);
+}
+
+CString CGame::GetPokersAll()
+{
+	return CPokerResult::GetPokerString(m_Poker, 5);
 }

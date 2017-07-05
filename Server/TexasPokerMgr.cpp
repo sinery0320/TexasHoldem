@@ -132,7 +132,9 @@ void CTexasPokerMgr::AddLoser(int id)
 	if (id < 0 || id >= (int)m_vtClient.size())	return;
 	auto pClient = m_vtClient[id];
 	auto client = (CTexasPokerClient *)pClient.get();
-	client->SetLoserNumber(m_ltLoserID.size());
+
+	//client->SetLoserNumber(m_ltLoserID.size());
+	client->SetNumber(int(m_ltClient.size() - m_ltLoserID.size()));
 	m_ltLoserID.push_back(id);
 }
 
@@ -195,8 +197,8 @@ void CTexasPokerMgr::OnTimer100MillSec()
 
 	case GM_END:
 		m_nGameState = GM_IDEL;
+		GetGameResult();
 		OnGameOver();
-		ShowResult();
 		break;
 	}
 }
@@ -209,7 +211,18 @@ std::shared_ptr<CTexasGame> CTexasPokerMgr::GetCurrentGame()
 	return m_vtGame.back();
 }
 
-void CTexasPokerMgr::ShowResult()
+void CTexasPokerMgr::OnGameOver()
+{
+	for (auto pClient : m_ltClient)
+	{
+		auto client = (CTexasPokerClient *)pClient.get();
+		client->SendGameOver();
+	}
+
+	IGameMgr::OnGameOver();
+}
+
+void CTexasPokerMgr::GetGameResult()
 {
 	std::list<std::shared_ptr<IClient>> ltClient;
 
@@ -240,7 +253,8 @@ void CTexasPokerMgr::ShowResult()
 	for (auto pClient : ltClient)
 	{
 		auto client = (CTexasPokerClient *)pClient.get();
-		str.Format(_T("No. %d, ID is %d, Current money %d"), ++i, client->GetID(), client->GetCurrentMoney());
+		client->SetNumber(++i);
+		str.Format(_T("No. %d, ID is %d, Current money %d"), i, client->GetID(), client->GetCurrentMoney());
 		strResult = strResult + str + _T("\r\n");
 	}
 

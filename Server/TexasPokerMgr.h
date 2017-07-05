@@ -40,6 +40,7 @@ namespace Game{
 
 			virtual bool StartGame();
 			virtual void StopGame();
+			virtual void OnGameOver();
 			virtual void CreateClient(TCP::CClientTcp* tcp);
 			virtual void OnClientDisconnect(TCP::CClientTcp* tcp);
 			virtual void OnTimer100MillSec();
@@ -51,7 +52,7 @@ namespace Game{
 		private:
 			void ReSortClient();
 			bool CheckGameOver();
-			void ShowResult();
+			void GetGameResult();
 		};
 	}
 }

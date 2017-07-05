@@ -27,10 +27,10 @@ CString CTexasPokerClient::GetInfoStr()
 	strInfo.Format(_T("curmoney:%d, state:%d"),
 		m_nCurrentMoney,
 		m_nGameState);
-	if (m_nLoserNumber != -1)
+	if (m_nNumber != -1)
 	{
 		CString str;
-		str.Format(_T(", loseid:%d"), m_nLoserNumber);
+		str.Format(_T(", number:%d"), m_nNumber);
 		strInfo += str;
 	}
 	if (!m_strReason.IsEmpty())
@@ -42,7 +42,7 @@ CString CTexasPokerClient::GetInfoStr()
 
 bool CTexasPokerClient::IsClientGameOver()
 {
-	return m_nLoserNumber != -1 ||
+	return m_nNumber != -1 ||
 		m_nCurrentMoney < 0 ||
 		m_nGameState == IGameMgr::REQ_GAMEOVER;
 }
@@ -69,10 +69,11 @@ void CTexasPokerClient::InitData()
 {
 	IClient::InitData();
 	m_nBetMoney = 0;
-	m_nTotalMoney = 30;//10000)
-	m_nCurrentMoney = m_nTotalMoney;
+	m_nClientTotalMoney = 30;//10000)
+	m_nCurrentMoney = m_nClientTotalMoney;
 	m_bGiveUp = false;
-	m_nLoserNumber = -1;
+	//m_nLoserNumber = -1;
+	m_nNumber = -1;
 	m_strReason.Empty();
 	ChangeState(IGameMgr::REQ_IDLE);
 }
@@ -146,6 +147,14 @@ void CTexasPokerClient::OnCmdRespond(byte *pData, int count)
 	case CMD_GIVERESULT:
 		ChangeState(IGameMgr::REQ_DONE);
 		break;
+
+	case CMD_GAMEOVER:
+		ChangeState(IGameMgr::REQ_DONE);
+		break;
+
+	default:
+		ASSERT(FALSE);
+		break;
 	}
 }
 
@@ -193,10 +202,10 @@ int CTexasPokerClient::SendInitRequest()
 		ZeroMemory(pData, byLen);
 
 		m_nCurrentCmd = CMD_INIT;
-		InitHead(pData, m_nCurrentCmd, 16);
+		InitHead(pData, m_nCurrentCmd, short(byLen - 8));
 
 		*(int*)&pData[8 + 0] = GetID();							// 
-		*(int*)&pData[8 + 4] = m_nTotalMoney;					// 
+		*(int*)&pData[8 + 4] = GetTotalMoney();					// 
 		*(int*)&pData[8 + 8] = (int)m_Mgr->m_ltClient.size();	// 
 		*(int*)&pData[8 + 12] = CTexasPokerMgr::GAME_UNIT_MONEY;	// 
 
@@ -215,7 +224,7 @@ void CTexasPokerClient::SendPokerRequest(std::vector<byte> pokers, int banker, i
 	ZeroMemory(pData, byLen);
 
 	m_nCurrentCmd = CMD_SENDPOKER;
-	InitHead(pData, m_nCurrentCmd, 20);
+	InitHead(pData, m_nCurrentCmd, short(byLen - 8));
 
 	pData[8 + 0] = pokers[0];					// 
 	pData[8 + 1] = pokers[1];					// 
@@ -240,7 +249,7 @@ void CTexasPokerClient::SendBetRequest(int nMax, int nPrevBet, int nYourBet, int
 	ZeroMemory(pData, byLen);
 
 	m_nCurrentCmd = CMD_BET;
-	InitHead(pData, m_nCurrentCmd, (short)(16 + nSize + 1));
+	InitHead(pData, m_nCurrentCmd, (short)(byLen - 8));
 
 	*(int*)&pData[8 + 0] = nMax;				// 
 	*(int*)&pData[8 + 4] = nPrevBet;			// 
@@ -256,12 +265,12 @@ void CTexasPokerClient::SendBetRequest(int nMax, int nPrevBet, int nYourBet, int
 void CTexasPokerClient::SendResultRequest(bool bWin, int nTal, CString betInfo)
 {
 	int nSize = betInfo.GetLength() * sizeof(TCHAR);
-	int byLen = 8 + 8 + nSize + 1;
+	int byLen = 8 + 8 + nSize + 2;
 	byte *pData = new byte[byLen];
 	ZeroMemory(pData, byLen);
 
 	m_nCurrentCmd = CMD_GIVERESULT;
-	InitHead(pData, m_nCurrentCmd, (short)(8 + nSize + 1));
+	InitHead(pData, m_nCurrentCmd, (short)(byLen - 8));
 
 	*(int*)&pData[8 + 0] = bWin ? 1 : 0;				// 
 	*(int*)&pData[8 + 4] = nTal;						// 
@@ -272,18 +281,18 @@ void CTexasPokerClient::SendResultRequest(bool bWin, int nTal, CString betInfo)
 	delete[] pData;
 }
 
-void CTexasPokerClient::SendGameOver(CString strReason)
+void CTexasPokerClient::SendGameOver(/*int nNumber, CString strReason*/)
 {
-	int nSize = strReason.GetLength() * sizeof(TCHAR);
-	int byLen = 8 + 4 + nSize + 1;
+	int nSize = m_strReason.GetLength() * sizeof(TCHAR);
+	int byLen = 8 + 4 + nSize + 2;
 	byte *pData = new byte[byLen];
 	ZeroMemory(pData, byLen);
 
 	m_nCurrentCmd = CMD_GAMEOVER;
-	InitHead(pData, m_nCurrentCmd, (short)(8 + nSize + 1));
+	InitHead(pData, m_nCurrentCmd, (short)(byLen - 8));
 
-	*(int*)&pData[8 + 0] = m_nCurrentMoney;				// 
-	memcpy(&pData[8 + 4], strReason.GetBuffer(), nSize);//
+	*(int*)&pData[8 + 0] = m_nNumber;						// 
+	memcpy(&pData[8 + 4], m_strReason.GetBuffer(), nSize);	//
 
 	ChangeState(IGameMgr::REQ_WAIT);
 	SendData(pData, byLen);

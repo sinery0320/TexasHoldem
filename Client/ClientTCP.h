@@ -5,7 +5,7 @@ class CClientTcp : public CSocket
 {
 public:
 	enum{
-		DATA_MIN_SIZE = 16,
+		DATA_MIN_SIZE = 8,
 		DATA_MAX_SIZE = 1024,
 		DATA_BUF_SIZE = 2048,
 	};
@@ -20,6 +20,7 @@ private:
 	void OnReceiveBetRequest(byte *data, int len);
 	void OnReceiveResult(byte *data, int len);
 	void OnGameOver(byte *data, int len);
+	void SendData(byte *data, int len);
 
 public:
 	CClientTcp(CGameMgr *mgr);
@@ -27,6 +28,5 @@ public:
 	virtual void OnReceive(int nErrorCode);
 	virtual void OnClose(int nErrorCode);
 	BOOL ConnectTo(CString strIP, UINT uiPort);
-	BOOL ReadData();
 };
 

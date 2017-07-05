@@ -3,7 +3,7 @@
 class CClientDlg;
 class CClientTcp;
 class CGame;
-class CGameMgr
+class CGameMgr : public IPlayerInfo
 {
 private:
 	CClientDlg *m_pDlg;
@@ -12,8 +12,8 @@ private:
 	int m_nPlayerCount;		// How many players
 	int m_nTotalMoney;		// How much money do you have at first time
 	int m_nCurrentMoney;	// How much money you have right now
-	int m_nBetMoney;		// How much money you bet this game
-	int m_nBetUnitMoney;	// Your bet money must be n * m_nBetUnitMoney
+	//int m_nBetMoney;		// How much money you bet this game
+	int m_nBetUnitMoney;	// Your bet money must be integer multiple of m_nBetUnitMoney
 	std::shared_ptr<CClientTcp> m_pClientTcp;
 	std::vector<std::shared_ptr<CGame>> m_vtGame;
 
@@ -24,11 +24,17 @@ public:
 	void SetBetUnit(int money){ m_nBetUnitMoney = money; }
 
 	std::shared_ptr<CGame> CurrentGame(){ std::shared_ptr<CGame> e; if (m_vtGame.empty()) return e; return m_vtGame.back(); }
-	int GetID(){ return m_nID; }
-	int GetPlayCount(){ return m_nPlayerCount; }		// How many players
-	int GetBetMoney(){ return m_nBetMoney; }			// How much money you bet this game
-	int GetTotalMoney(){ return m_nTotalMoney; }		// How much money do you have at first time
-	int GetCurrentMoney(){ return m_nCurrentMoney; }	// How much money you have right now
+	CClientDlg *GetDlg(){ return m_pDlg; }
+
+	virtual int GetID(){ return m_nID; }
+	virtual int GetPlayCount(){ return m_nPlayerCount; }		// How many players
+	//virtual int GetBetMoney(){ return m_nBetMoney; }			// How much money you bet this game
+	virtual int GetTotalMoney(){ return m_nTotalMoney; }		// How much money do you have at first time
+	virtual int GetCurrentMoney(){ return m_nCurrentMoney; }	// How much money you have right now
+	virtual int GetBetUnitMoney(){ return m_nBetUnitMoney; }	// Your bet money must be integer multiple of m_nBetUnitMoney
+	virtual int GetGameCount() { return (int)m_vtGame.size(); }	// Get how many games
+	virtual IGame* GetCurrentGame() { auto g = CurrentGame(); if (g) return (IGame *)g.get(); return NULL; }	// Get current game object
+	virtual IGame* GetGame(int id) { if (id < 0 || id >= (int)m_vtGame.size()) return NULL; return (IGame *)m_vtGame[id].get(); }		// Get current game object
 
 public:
 	CGameMgr(CClientDlg *dlg);
@@ -42,6 +48,14 @@ public:
 	void AddBetMoney(int money);
 	void AddWinMoney(int money);
 	void FillGrid(CListCtrl& lcGame);
+
 	CString GetName();
+	void OnInit();
+	void OnReceivePokers();
+	int RequireBetMoney(int nMax, int nPrevBet, int nMyBet, int nTotal, CString strAllBet);
+	void OnOneGameOver(bool bIfWin, int nWinMoney, CString strResultInfo);
+
+private:
+	std::shared_ptr<CPlayer> Player();
 };
 

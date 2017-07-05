@@ -1,5 +1,7 @@
 #include "stdafx.h"
 #include "Gbl.h"
+#include "Client.h"
+#include "ClientDlg.h"
 #include "ClientTcp.h"
 #include "GameMgr.h"
 #include "Game.h"
@@ -41,14 +43,6 @@ BOOL CClientTcp::ConnectTo(CString strIP, UINT uiPort)
 	return m_bConnect;
 }
 
-BOOL CClientTcp::ReadData()
-{
-	byte data[DATA_BUF_SIZE] = { 0 };
-	int nRet = Send(data, 10);
-	ASSERT(nRet != SOCKET_ERROR);
-	return nRet != SOCKET_ERROR;
-}
-
 void CClientTcp::OnReceive(int nErrorCode)
 {
 	byte data[DATA_BUF_SIZE] = { 0 };
@@ -56,10 +50,27 @@ void CClientTcp::OnReceive(int nErrorCode)
 	ASSERT(len >= DATA_MIN_SIZE && len <= DATA_MAX_SIZE);
 	if (len < 0)		return;
 
+	m_Mgr->GetDlg()->m_CountRcv++;
+	m_Mgr->GetDlg()->UpdateData(FALSE);
+
 	// Check head
 	if (data[0] != 1)	return;	// 1:send, 2:return
-	if ((len - 8) != *(short *)&data[6])
-		return;					// data len
+	ASSERT((len - 8) >= *(short *)&data[6]);
+	if ((len - 8) > *(short *)&data[6])
+	{
+		byte p[1024] = { 0 };
+		int l = len - 8 - *(short *)&data[6];
+		memcpy(p, &data[8 + *(short *)&data[6]], l);
+		
+		CString str, s;
+		for (int i = 0; i < l; i++)
+		{
+			s.Format(_T("%.2X "), p[i]);
+			str += s;
+		}
+		MessageBox(NULL, str, _T("Error byte"), MB_OK);
+	}
+	len = 8 + *(short *)&data[6];
 
 	switch (*(short *)&data[2])	// command id
 	{
@@ -99,15 +110,17 @@ void CClientTcp::OnClientInit(byte *data, int len)
 	m_Mgr->SetTotalMoney(*(int *)&data[4]);
 	m_Mgr->SetPlayerCount(*(int *)&data[8]);
 	m_Mgr->SetBetUnit(*(int *)&data[12]);
-
 	CString name = m_Mgr->GetName();
+
+	m_Mgr->OnInit();
+
 	int nSize = name.GetLength() * sizeof(TCHAR);
 	byte *pRet = new byte[8 + nSize + 1];
 	memset(pRet, 0, 8 + nSize + 1);
 	InitHead(pRet, CMD_INIT, nSize + 1);
 	memcpy(&pRet[8], name.GetBuffer(), nSize);
 
-	Send(pRet, 8 + nSize + 1);
+	SendData(pRet, 8 + nSize + 1);
 	delete[] pRet;
 }
 
@@ -122,9 +135,11 @@ void CClientTcp::OnReceivePoker(byte *data, int len)
 	}
 	game->SetID(*(int *)&data[16]);
 
+	m_Mgr->OnReceivePokers();
+
 	byte pRet[8] = { 0 };
 	InitHead(pRet, CMD_SENDPOKER, 0);
-	Send(pRet, 8);
+	SendData(pRet, 8);
 }
 
 void CClientTcp::OnReceiveBetRequest(byte *data, int len)
@@ -157,12 +172,13 @@ void CClientTcp::OnReceiveBetRequest(byte *data, int len)
 		if (id != -1) mpBetMoney[id] = money;
 	}
 
-	int nBetMoney = game->GetBetMoney(nMax, nPrevBet, nMyBet, nTotal, mpBetMoney);
+	//int nBetMoney = game->GetBetMoney(nMax, nPrevBet, nMyBet, nTotal, mpBetMoney);
+	int nBetMoney = m_Mgr->RequireBetMoney(nMax, nPrevBet, nMyBet, nTotal, strAllBet);
 
 	byte pRet[8 + 4] = { 0 };
 	InitHead(pRet, CMD_BET, 0);
 	*(int *)&pRet[8] = nBetMoney;
-	Send(pRet, 8 + 4);
+	SendData(pRet, 8 + 4);
 }
 
 void CClientTcp::OnReceiveResult(byte *data, int len)
@@ -174,18 +190,32 @@ void CClientTcp::OnReceiveResult(byte *data, int len)
 
 	if (bIfWin)	m_Mgr->AddWinMoney(nWinMoney);
 
-	CString strAllBet((TCHAR*)&data[8]);
-	game->SetResultInfo(strAllBet);
+	CString strResultInfo((TCHAR*)&data[8]);
+	game->SetResultInfo(strResultInfo);
+
+	m_Mgr->OnOneGameOver(bIfWin, nWinMoney, strResultInfo);
 
 	byte pRet[8] = { 0 };
 	InitHead(pRet, CMD_GIVERESULT, 0);
-	Send(pRet, 8);
+	SendData(pRet, 8);
 }
 
 void CClientTcp::OnGameOver(byte *data, int len)
 {
 	auto game = m_Mgr->CurrentGame();
-
+	int nNumber = *(int *)data;
 	CString strReason((TCHAR*)&data[4]);
-	MessageBox(NULL, strReason, _T("Game over"), MB_OK | MB_ICONINFORMATION);
+	//MessageBox(NULL, strReason, _T("Game over"), MB_OK | MB_ICONINFORMATION);
+
+	byte pRet[8] = { 0 };
+	InitHead(pRet, CMD_GAMEOVER, 0);
+	SendData(pRet, 8);
+}
+
+void CClientTcp::SendData(byte *data, int len)
+{
+	m_Mgr->GetDlg()->m_CountSend++;
+	m_Mgr->GetDlg()->UpdateData(FALSE);
+
+	Send(data, len);
 }

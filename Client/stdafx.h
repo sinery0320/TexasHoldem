@@ -41,9 +41,7 @@
 #include <vector>
 #include <map>
 
-#include "..\Player\Player.h"
-
-
+#include "..\Player\Include.h"
 
 #ifdef _UNICODE
 #if defined _M_IX86

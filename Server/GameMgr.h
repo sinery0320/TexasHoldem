@@ -35,7 +35,6 @@ namespace Game{
 
 	public:
 		void OnTimer100MSec();
-		void OnGameOver();
 
 	public:
 		IGameMgr(CGameSevDlg *dlg);
@@ -45,6 +44,7 @@ namespace Game{
 		virtual bool StopListen();
 		virtual bool StartGame();
 		virtual void StopGame();
+		virtual void OnGameOver();
 
 		virtual void CreateClient(TCP::CClientTcp* tcp) = 0;
 		virtual void OnClientDisconnect(TCP::CClientTcp* tcp) = 0;

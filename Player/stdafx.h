@@ -5,7 +5,7 @@
 
 #pragma once
 
-#include "targetver.h"
+#include <SDKDDKVer.h>
 
 #define WIN32_LEAN_AND_MEAN             // Exclude rarely-used stuff from Windows headers
 #define _ATL_CSTRING_EXPLICIT_CONSTRUCTORS      // some CString constructors will be explicit
@@ -29,6 +29,4 @@
 // Windows Header Files:
 #include <windows.h>
 
-
-
-// TODO: reference additional headers your program requires here
+#include <list>

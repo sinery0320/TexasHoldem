@@ -25,6 +25,8 @@ CClientDlg::CClientDlg(CWnd* pParent /*=NULL*/)
 	, m_nID(0)
 	, m_nPlayerCount(0)
 	, m_bGiveUp(FALSE)
+	, m_CountSend(0)
+	, m_CountRcv(0)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 	m_pMgr = std::shared_ptr<CGameMgr>(new CGameMgr(this));
@@ -41,6 +43,8 @@ void CClientDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Text(pDX, IDC_EDIT_COUNT, m_nPlayerCount);
 	DDX_Control(pDX, IDC_LIST, m_ListCtrl);
 	DDX_Check(pDX, IDC_CK_GIVEUP, m_bGiveUp);
+	DDX_Text(pDX, IDC_EDIT_SEND, m_CountSend);
+	DDX_Text(pDX, IDC_EDIT_RCV, m_CountRcv);
 }
 
 BEGIN_MESSAGE_MAP(CClientDlg, CDialogEx)

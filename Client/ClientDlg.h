@@ -46,4 +46,6 @@ public:
 	afx_msg void OnBnClickedQuit();
 	afx_msg void OnBnClickedCkGiveup();
 	BOOL m_bGiveUp;
+	int m_CountSend;
+	int m_CountRcv;
 };
