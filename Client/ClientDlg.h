@@ -44,4 +44,6 @@ public:
 	afx_msg void OnBnClickedOk();
 	afx_msg void OnTimer(UINT_PTR nIDEvent);
 	afx_msg void OnBnClickedQuit();
+	afx_msg void OnBnClickedCkGiveup();
+	BOOL m_bGiveUp;
 };

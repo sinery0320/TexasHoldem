@@ -94,6 +94,7 @@ void CClientTcp::OnClose(int nErrorCode)
 
 void CClientTcp::OnClientInit(byte *data, int len)
 {
+	m_Mgr->Init();
 	m_Mgr->SetID(*(int *)&data[0]);
 	m_Mgr->SetTotalMoney(*(int *)&data[4]);
 	m_Mgr->SetPlayerCount(*(int *)&data[8]);
@@ -156,10 +157,7 @@ void CClientTcp::OnReceiveBetRequest(byte *data, int len)
 		if (id != -1) mpBetMoney[id] = money;
 	}
 
-	//int nBetMoney = game->GetBetMoney(nMax, nPrevBet, nMyBet, nTotal, mpBetMoney);
-  //int nBetMoney = 0;
-  int nBetMoney = -1;
-
+	int nBetMoney = game->GetBetMoney(nMax, nPrevBet, nMyBet, nTotal, mpBetMoney);
 
 	byte pRet[8 + 4] = { 0 };
 	InitHead(pRet, CMD_BET, 0);

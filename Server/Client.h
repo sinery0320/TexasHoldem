@@ -24,6 +24,7 @@ namespace Game{
 		CString GetOutput(){ return m_strOutput; }
 
 		virtual CString GetInfoStr(){ return _T("empty"); }
+		virtual void InitData(){ m_nID = -1; m_strName.Empty(); m_strOutput.Empty(); }
 		virtual void InitOneGame(){ ; }
 		virtual void WinTheGame(int money){ UNREFERENCED_PARAMETER(money); }
 

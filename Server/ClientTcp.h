@@ -13,6 +13,7 @@ namespace TCP{
 		int m_nLen;
 		bool m_bConnect;
 		std::function<void(byte*, int)> m_ResponseFun;
+		std::list<CString> m_ltPackage;
 
 	private:
 		void ResponseError(int nErrorID);
@@ -23,6 +24,7 @@ namespace TCP{
 		virtual BOOL InitInfo();
 		virtual void OnReceive(int nErrorCode);
 		virtual void OnClose(int nErrorCode);
+		void SendData(byte *pData, int len);
 		void InitResponseFun(Game::IClient *pClient);
 	};
 }

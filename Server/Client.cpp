@@ -37,6 +37,5 @@ void IClient::ResponseFun(byte *pData, int count)
 
 void IClient::SendData(byte* pData, int count)
 {
-	int nRet = m_pTcp->Send(pData, count);
-	UNREFERENCED_PARAMETER(nRet);
+	m_pTcp->SendData(pData, count);
 }

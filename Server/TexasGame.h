@@ -27,7 +27,7 @@ namespace Game{
 			int m_nCurClientID;			// Current client id
 			int m_nTotalMoney;			// How much money the client have bet
 			std::list<int> m_ltWinID;	// Winners id
-			std::vector<byte> m_vtOpenPoker;
+			byte m_vtOpenPoker[3];
 			std::vector<CString> m_vtClinetInfo;
 
 		public:
@@ -43,6 +43,7 @@ namespace Game{
 			CString GetInfoStr();
 			void AddClientInfo(int id, CString strClientInfo);
 			void ShowInfo();
+			void ShowAllClientInfo(CListCtrl& listCtrl);
 
 		private:
 			void SendPoker();				// Send pokers to every client (not quit one)

@@ -1,4 +1,4 @@
-// GameInfoDlg.cpp : 实现文件
+// GameInfoDlg.cpp
 //
 
 #include "stdafx.h"
@@ -6,14 +6,17 @@
 #include "GameInfoDlg.h"
 #include "afxdialogex.h"
 
+#include "TexasGame.h"
 
-// CGameInfoDlg 对话框
+
+// CGameInfoDlg
 const int COL_ID = 0;
 const int COL_INFO = 1;
 IMPLEMENT_DYNAMIC(CGameInfoDlg, CDialogEx)
 
-CGameInfoDlg::CGameInfoDlg(CWnd* pParent /*=NULL*/)
+CGameInfoDlg::CGameInfoDlg(Game::Texas::CTexasGame *game, CWnd* pParent /*=NULL*/)
 	: CDialogEx(CGameInfoDlg::IDD, pParent)
+	, m_pGame(game)
 {
 
 }
@@ -34,7 +37,6 @@ BEGIN_MESSAGE_MAP(CGameInfoDlg, CDialogEx)
 END_MESSAGE_MAP()
 
 
-// CGameInfoDlg 消息处理程序
 void CGameInfoDlg::OnBnClickedOk()
 {
 	CDialogEx::OnOK();
@@ -53,10 +55,7 @@ BOOL CGameInfoDlg::OnInitDialog()
 	m_ListCtrl.SetColumnWidth(COL_ID, 30);
 	m_ListCtrl.SetColumnWidth(COL_INFO, rect.Width() - 30);
 
+	m_pGame->ShowAllClientInfo(m_ListCtrl);
 	return TRUE;
 }
 
-void CGameInfoDlg::ShowInfo()
-{
-
-}

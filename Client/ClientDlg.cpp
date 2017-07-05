@@ -24,9 +24,10 @@ CClientDlg::CClientDlg(CWnd* pParent /*=NULL*/)
 	, m_nMoneyCurrent(0)
 	, m_nID(0)
 	, m_nPlayerCount(0)
+	, m_bGiveUp(FALSE)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
-	m_pMgr = std::shared_ptr<CGameMgr>(new CGameMgr());
+	m_pMgr = std::shared_ptr<CGameMgr>(new CGameMgr(this));
 }
 
 void CClientDlg::DoDataExchange(CDataExchange* pDX)
@@ -39,6 +40,7 @@ void CClientDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Text(pDX, IDC_EDIT_ID, m_nID);
 	DDX_Text(pDX, IDC_EDIT_COUNT, m_nPlayerCount);
 	DDX_Control(pDX, IDC_LIST, m_ListCtrl);
+	DDX_Check(pDX, IDC_CK_GIVEUP, m_bGiveUp);
 }
 
 BEGIN_MESSAGE_MAP(CClientDlg, CDialogEx)
@@ -48,6 +50,7 @@ BEGIN_MESSAGE_MAP(CClientDlg, CDialogEx)
 	ON_WM_QUERYDRAGICON()
 	ON_BN_CLICKED(IDOK, &CClientDlg::OnBnClickedOk)
 	ON_BN_CLICKED(IDQUIT, &CClientDlg::OnBnClickedQuit)
+	ON_BN_CLICKED(IDC_CK_GIVEUP, &CClientDlg::OnBnClickedCkGiveup)
 END_MESSAGE_MAP()
 
 
@@ -164,4 +167,9 @@ void CClientDlg::OnTimer(UINT_PTR nIDEvent)
 		m_nPlayerCount = m_pMgr->GetPlayCount();
 		UpdateData(FALSE);
 	}
+}
+
+void CClientDlg::OnBnClickedCkGiveup()
+{
+	UpdateData(TRUE);
 }

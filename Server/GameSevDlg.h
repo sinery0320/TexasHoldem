@@ -29,17 +29,18 @@ public:
 
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
-	void OnStateChanged();
 
 	DECLARE_MESSAGE_MAP()
 public:
 	enum { IDD = IDD_GAMESEV_DLG };
 	CGameSevDlg(CWnd* pParent = NULL);   // standard constructor
 	virtual ~CGameSevDlg();
+	void OnStateChanged();
 	afx_msg void OnBnClickedBtListen();
 	virtual BOOL OnInitDialog();
 	afx_msg void OnNMDblclkListClient(NMHDR *pNMHDR, LRESULT *pResult);
 	afx_msg void OnNMDblclkListGame(NMHDR *pNMHDR, LRESULT *pResult);
 	afx_msg void OnBnClickedBtStartgame();
 	afx_msg void OnTimer(UINT_PTR nIDEvent);
+	afx_msg void OnBnClickedBtRestartgame();
 };

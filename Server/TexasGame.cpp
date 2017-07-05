@@ -1,4 +1,6 @@
 #include "stdafx.h"
+#include "GameServer.h"
+#include "GameInfoDlg.h"
 #include "Gbl.h"
 
 #include "TexasGame.h"
@@ -157,12 +159,11 @@ void CTexasGame::SendPoker()
 	};
 
 	// init open hand hide
-	m_vtOpenPoker.clear();
 	for (int i = 0; i < 3; i++)
 	{
 		byte rd = GetRandPoker();
 		poker[rd] = 1;
-		m_vtOpenPoker.push_back(rd);
+		m_vtOpenPoker[i] = rd;
 	}
 
 	// init and send poker to every client
@@ -179,14 +180,25 @@ void CTexasGame::SendPoker()
 
 		if (client->GetID() == m_nBankerID)
 		{
-			client->AddBetMoeny(CTexasPokerClient::SET_DEFAULT_MONEY);
-			m_nTotalMoney += CTexasPokerClient::SET_DEFAULT_MONEY;
+			client->AddBetMoeny(CTexasPokerMgr::GAME_DEFAULT_MONEY);
+			m_nTotalMoney += CTexasPokerMgr::GAME_DEFAULT_MONEY;
+			AddClientInfo(client->GetID(), _T("banker:1"));
 		}
+		else
+		{
+			AddClientInfo(client->GetID(), _T("banker:0"));
+		}
+
 		vtpk[0] = GetRandPoker();
 		vtpk[1] = GetRandPoker();
 		client->SendPokerRequest(vtpk, m_nBankerID, GetGameID());
-		m_vtClinetInfo[i] = m_vtClinetInfo[i] + _T("poker:") + CTexasPokerResult::GetPokerString(client->GetPokers()) + _T("\r\n");
+		AddClientInfo(i, _T("openpoker:") + CTexasPokerResult::GetPokerString(m_vtOpenPoker, 3));
+		AddClientInfo(i, _T("poker:") + CTexasPokerResult::GetPokerString(client->GetPokers()));
 	}
+
+	CString strClientInfo;
+	strClientInfo.Format(_T("bet:%d"), CTexasPokerMgr::GAME_DEFAULT_MONEY);
+	AddClientInfo(m_nBankerID, strClientInfo);
 
 	m_nGameState = PS_SEND_POKER_WAIT;
 }
@@ -239,9 +251,10 @@ void CTexasGame::SendResult(bool bShow)
 	for (std::shared_ptr<IClient> pClient : m_Mgr->m_vtClient)
 	{
 		CTexasPokerClient *client = (CTexasPokerClient *)pClient.get();
-		str.Format(_T("id:%d,bet:%d,win:%d"),
+		str.Format(_T("id:%d, bet:%d, giveup:%d, win:%d"),
 			client->GetID(),
 			client->GetBetMoney(),
+			client->IsGiveUp() ? 1 : 0,
 			mpWinner.find(client->GetID()) != mpWinner.end() ? 1 : 0);
 
 		if (bShow && !client->IsClientGameOver())
@@ -268,6 +281,12 @@ bool CTexasGame::AddBet(int clientID, int nMoney, CString& strReason)
 {
 	if (clientID != m_nCurClientID)	{ ASSERT(FALSE);  return false; }
 	auto client = (CTexasPokerClient *)m_Mgr->m_vtClient[clientID].get();
+
+	if ((nMoney % CTexasPokerMgr::GAME_UNIT_MONEY) > 0)
+	{
+		strReason.Format(_T("Game id %d, the bet money %d must be integer multiple of %d"), GetGameID(), nMoney, CTexasPokerMgr::GAME_UNIT_MONEY);
+		return false;
+	}
 
 	if (nMoney > GetMaxBetMoney())		// illegal value, bet request has told client the how much the max money is.
 	{
@@ -508,9 +527,22 @@ int CTexasGame::ComparePoker(int lid, int rid)
 void CTexasGame::AddClientInfo(int id, CString strClientInfo)
 {
 	if (id >= 0 && id < (int)m_vtClinetInfo.size())
-		m_vtClinetInfo[id] = m_vtClinetInfo[id] + strClientInfo + _T("\r\n");
+		m_vtClinetInfo[id] = m_vtClinetInfo[id] + strClientInfo + _T(", ");
 }
 
 void CTexasGame::ShowInfo()
 {
+	CGameInfoDlg dlg(this);
+	dlg.DoModal();
+}
+
+void CTexasGame::ShowAllClientInfo(CListCtrl& listCtrl)
+{
+	CString str;
+	for (int i = 0; i < (int)m_vtClinetInfo.size();i++)
+	{
+		str.Format(_T("%d"), i);
+		listCtrl.InsertItem(i, str);
+		listCtrl.SetItemText(i, 1, m_vtClinetInfo[i]);
+	}
 }

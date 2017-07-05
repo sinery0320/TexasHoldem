@@ -1,10 +1,13 @@
 #pragma once
 
+class CClientDlg;
 class CClientTcp;
 class CGame;
 class CGameMgr
 {
 private:
+	CClientDlg *m_pDlg;
+	std::shared_ptr<CPlayer> m_Player;
 	int m_nID;				// My id, from 0
 	int m_nPlayerCount;		// How many players
 	int m_nTotalMoney;		// How much money do you have at first time
@@ -28,11 +31,13 @@ public:
 	int GetCurrentMoney(){ return m_nCurrentMoney; }	// How much money you have right now
 
 public:
-	CGameMgr();
+	CGameMgr(CClientDlg *dlg);
 	~CGameMgr();
 
+	void Init();
 	BOOL StartGame(int nIP, int nPort);
 	BOOL StopGame();
+	BOOL IsGiveUp();
 	std::shared_ptr<CGame> CreateNewGame();
 	void AddBetMoney(int money);
 	void AddWinMoney(int money);

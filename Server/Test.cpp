@@ -30,4 +30,18 @@ void CTest::DoTest(CGameSevDlg *dlg)
 	//}
 	//
 	//pMgr->StartGame();
+
+	//std::list<int> ltClient;
+	//ltClient.push_back(4);
+	//ltClient.push_back(9);
+	//ltClient.push_back(3);
+	//ltClient.push_back(7);
+	//ltClient.push_back(2);
+	//
+	//ltClient.sort([this](int lth, int rth)->bool
+	//{
+	//	return lth > rth;
+	//});
+	//
+	//int n = ltClient.size();
 }

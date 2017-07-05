@@ -180,15 +180,25 @@ void CServerTcp::OnAccept(int nErrorCode)
     UNREFERENCED_PARAMETER(nErrorCode);
     if (nErrorCode == 0)
     {
-		if (m_Dlg->GetGameMgr()->GetServerState() == Game::IGameMgr::SEV_LISTEN)
+		auto pMgr = m_Dlg->GetGameMgr();
+		if ((int)pMgr->m_ltClient.size() >= CLIENT_MAX_COUNT)
+			return;
+
+		if (pMgr->GetServerState() == Game::IGameMgr::SEV_LISTEN)
 		{
 			CClientTcp *pSock = new CClientTcp(this);
 			if (Accept(*pSock) && pSock->InitInfo())
 			{
-				m_Dlg->GetGameMgr()->CreateClient(pSock);
+				pMgr->CreateClient(pSock);
 			}
 		}
     }
     CSocket::OnAccept(nErrorCode);
+}
+
+void CServerTcp::OnClientDisconnect(CClientTcp *pClientTcp)
+{
+	auto pMgr = m_Dlg->GetGameMgr();
+	pMgr->OnClientDisconnect(pClientTcp);
 }
 

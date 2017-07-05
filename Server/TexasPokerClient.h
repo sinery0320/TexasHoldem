@@ -7,13 +7,6 @@ namespace Game{
 		class CTexasPokerMgr;
 		class CTexasPokerClient : public Game::IClient
 		{
-		public:
-			enum {
-				SET_MIN_MONEY = 10,
-				SET_DEFAULT_MONEY = 10,
-				SET_UNIT_MONEY = 5,
-			};
-
 		private:
 			CTexasPokerMgr* m_Mgr;
 			int m_nTotalMoney;
@@ -47,6 +40,7 @@ namespace Game{
 			void OnTimeOver();
 			void CheckGameOver();
 			virtual CString GetInfoStr();
+			virtual void InitData();
 			virtual void InitOneGame();
 			virtual void WinTheGame(int money);
 			virtual bool IsClientGameOver();
@@ -56,10 +50,10 @@ namespace Game{
 			void SendBetRequest(int nMax, int nPrevBet, int nYourBet, int nTal, CString strAllBet);
 			void SendResultRequest(bool bWin, int nTal, CString betInfo);
 			void SendGameOver(CString strReason);
+			void ChangeState(int state, CString strReason = _T(""));
 
 		private:
 			bool OnBet(byte *data, int len);
-			void ChangeState(int state, CString strReason = _T(""));
 		};
 	}
 }

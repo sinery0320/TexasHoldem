@@ -5,20 +5,33 @@
 #include "ClientTcp.h"
 #include "Game.h"
 
-CGameMgr::CGameMgr()
-	: m_nID(-1)
+CGameMgr::CGameMgr(CClientDlg *dlg)
+	: m_pDlg(dlg)
+	, m_nID(-1)
 	, m_nPlayerCount(0)
 	, m_nTotalMoney(0)
 	, m_nCurrentMoney(0)
 	, m_nBetUnitMoney(0)
 	, m_nBetMoney(0)
 {
+	m_Player = std::shared_ptr<CPlayer>(new CPlayer());
 	StopGame();
 }
 
 CGameMgr::~CGameMgr()
 {
 	StopGame();
+}
+
+void CGameMgr::Init()
+{
+	m_nID = -1;
+	m_nPlayerCount = 0;
+	m_nTotalMoney = 0;
+	m_nCurrentMoney = 0;
+	m_nBetUnitMoney = 0;
+	m_nBetMoney = 0;
+	m_vtGame.clear();
 }
 
 BOOL CGameMgr::StartGame(int nIP, int nPort)
@@ -69,6 +82,11 @@ void CGameMgr::AddWinMoney(int money)
 CString CGameMgr::GetName()
 {
 	return _T("Atlas Liu");
+}
+
+BOOL CGameMgr::IsGiveUp()
+{
+	return m_pDlg->m_bGiveUp;
 }
 
 void CGameMgr::FillGrid(CListCtrl& lcGame)

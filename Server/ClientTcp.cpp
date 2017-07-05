@@ -3,10 +3,13 @@
 
 #include "stdafx.h"
 #include "GameServer.h"
+#include "Gbl.h"
+
 #include "ClientTcp.h"
 #include "ServerTcp.h"
 #include "Client.h"
 
+const int MAX_PACKAGE = 10;
 ///////////////////////////////////////////////////////////
 using namespace TCP;
 // CClientTcp
@@ -73,17 +76,53 @@ void CClientTcp::OnReceive(int nErrorCode)
 	if (m_nLen == SOCKET_ERROR)
 		return;
 
+	// Check error
 	if (m_nLen < CServerTcp::DATA_MIN_SIZE ||
 		m_nLen > CServerTcp::DATA_MAX_SIZE)
 	{
+		ASSERT(FALSE);
 		ResponseError(CServerTcp::DATA_ERR_SIZE);
 		return;
 	}
 
+	// Add log
+	CString strPack = CGbl::GetCurrentTimeStr() + _T(" <- ");
+	CString str;
+	for (int i = 0; i < m_nLen; i++)
+	{
+		str.Format(_T("%.2X "), m_pData[i]);
+		strPack += str;
+	}
+	while ((int)m_ltPackage.size() >= MAX_PACKAGE){
+		m_ltPackage.pop_front();
+	}
+	m_ltPackage.push_back(strPack);
+
+	// Send to client
 	if (!m_ResponseFun._Empty())
 		m_ResponseFun(m_pData, m_nLen);
 
 	CSocket::OnReceive(nErrorCode);
+}
+
+void CClientTcp::SendData(byte *pData, int len)
+{
+	// Add log
+	CString strPack = CGbl::GetCurrentTimeStr() + _T(" -> ");
+	CString str;
+	for (int i = 0; i < len; i++)
+	{
+		str.Format(_T("%.2X "), pData[i]);
+		strPack += str;
+	}
+	while ((int)m_ltPackage.size() >= MAX_PACKAGE){
+		m_ltPackage.pop_front();
+	}
+	m_ltPackage.push_back(strPack);
+
+	// Send data
+	int n = Send(pData, len);
+	ASSERT(n);
 }
 
 void CClientTcp::OnClose(int nErrorCode)
@@ -95,6 +134,7 @@ void CClientTcp::OnClose(int nErrorCode)
 		delete[] m_pData;
 		m_pData = nullptr;
 	}
+	m_Server->OnClientDisconnect(this);
 	CSocket::OnClose(nErrorCode);
 }
 

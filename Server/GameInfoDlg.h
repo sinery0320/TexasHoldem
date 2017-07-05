@@ -2,22 +2,23 @@
 #include "afxcmn.h"
 
 
-// CGameInfoDlg 对话框
+// CGameInfoDlg
+namespace Game{
+	namespace Texas{ class CTexasGame; }
+}
 
 class CGameInfoDlg : public CDialogEx
 {
 	DECLARE_DYNAMIC(CGameInfoDlg)
-
+	Game::Texas::CTexasGame *m_pGame;
 public:
-	CGameInfoDlg(CWnd* pParent = NULL);   // 标准构造函数
+	CGameInfoDlg(Game::Texas::CTexasGame *game, CWnd* pParent = NULL);
 	virtual ~CGameInfoDlg();
 
-// 对话框数据
 	enum { IDD = IDD_GAME_INFO_DIALOG };
 
 protected:
-	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV 支持
-	void ShowInfo();
+	virtual void DoDataExchange(CDataExchange* pDX);
 
 	DECLARE_MESSAGE_MAP()
 public:

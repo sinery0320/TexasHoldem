@@ -43,6 +43,8 @@ CString CGame::GetInfoStr()
 
 int CGame::GetBetMoney(int nMaxBet, int nPrevBet, int nMyBet, int nTotal, std::map<int, int> mpBetMoney)
 {
+	if (m_Mgr->IsGiveUp())	return -1;	// give up
+
 	int nRet = nPrevBet - nMyBet;
 	ASSERT(nRet >= 0);
 	if (nRet < 0)	nRet = -1;

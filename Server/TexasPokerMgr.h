@@ -11,11 +11,16 @@ namespace Game{
 		class CTexasPokerMgr : public Game::IGameMgr
 		{
 		public:
-			enum GAMESTATE{
+			enum {
 				GM_IDEL,
 				GM_INIT,
 				GM_GAME,
 				GM_END,
+
+				GAME_MAX = 10,
+				GAME_MIN_MONEY = 10,
+				GAME_DEFAULT_MONEY = 10,
+				GAME_UNIT_MONEY = 5,
 			};
 		private:
 			int m_nGameState;	// game state
@@ -36,6 +41,7 @@ namespace Game{
 			virtual bool StartGame();
 			virtual void StopGame();
 			virtual void CreateClient(TCP::CClientTcp* tcp);
+			virtual void OnClientDisconnect(TCP::CClientTcp* tcp);
 			virtual void OnTimer100MillSec();
 			virtual void FillGrid(CListCtrl& lcClient, CListCtrl& lcGame);
 			virtual void ShowGameInfo(int gameID);
@@ -45,6 +51,7 @@ namespace Game{
 		private:
 			void ReSortClient();
 			bool CheckGameOver();
+			void ShowResult();
 		};
 	}
 }

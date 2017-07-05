@@ -35,6 +35,7 @@ namespace Game{
 
 	public:
 		void OnTimer100MSec();
+		void OnGameOver();
 
 	public:
 		IGameMgr(CGameSevDlg *dlg);
@@ -46,6 +47,7 @@ namespace Game{
 		virtual void StopGame();
 
 		virtual void CreateClient(TCP::CClientTcp* tcp) = 0;
+		virtual void OnClientDisconnect(TCP::CClientTcp* tcp) = 0;
 		virtual void OnTimer100MillSec() = 0;
 		virtual void FillGrid(CListCtrl& lcClient, CListCtrl& lcGame){
 			UNREFERENCED_PARAMETER(lcClient);

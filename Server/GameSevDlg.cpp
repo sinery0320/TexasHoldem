@@ -22,7 +22,6 @@ CGameSevDlg::CGameSevDlg(CWnd* pParent /*=NULL*/)
 	: CDialog(CGameSevDlg::IDD, pParent)
 	, m_nListenPort(23456)
 {
-	//m_pGameMgr = std::shared_ptr<Game::IGameMgr>(new Game::Auction::CAuctionMgr(this));
 	m_pGameMgr = std::shared_ptr<Game::IGameMgr>(new Game::Texas::CTexasPokerMgr(this));
 }
 
@@ -44,6 +43,7 @@ BEGIN_MESSAGE_MAP(CGameSevDlg, CDialog)
 	ON_NOTIFY(NM_DBLCLK, IDC_LIST_GAME, &CGameSevDlg::OnNMDblclkListGame)
 	ON_BN_CLICKED(IDC_BT_STARTGAME, &CGameSevDlg::OnBnClickedBtStartgame)
 	ON_WM_TIMER()
+	ON_BN_CLICKED(IDC_BT_RESTARTGAME, &CGameSevDlg::OnBnClickedBtRestartgame)
 END_MESSAGE_MAP()
 
 
@@ -90,21 +90,21 @@ void CGameSevDlg::OnStateChanged()
 		GetDlgItem(IDC_EDIT_LISTEN_PORT)->EnableWindow(TRUE);
 		GetDlgItem(IDC_BT_LISTEN)->EnableWindow(TRUE);
 		GetDlgItem(IDC_BT_STARTGAME)->EnableWindow(FALSE);
-		GetDlgItem(IDC_BT_STARTGAME)->SetWindowText(_T("Start Game"));
+		//GetDlgItem(IDC_BT_STARTGAME)->SetWindowText(_T("Start Game"));
 		break;
 
 	case Game::IGameMgr::SEV_LISTEN:
 		GetDlgItem(IDC_EDIT_LISTEN_PORT)->EnableWindow(FALSE);
 		GetDlgItem(IDC_BT_LISTEN)->EnableWindow(FALSE);
 		GetDlgItem(IDC_BT_STARTGAME)->EnableWindow(TRUE);
-		GetDlgItem(IDC_BT_STARTGAME)->SetWindowText(_T("Start Game"));
+		//GetDlgItem(IDC_BT_STARTGAME)->SetWindowText(_T("Start Game"));
 		break;
 
 	case Game::IGameMgr::SEV_START:
 		GetDlgItem(IDC_EDIT_LISTEN_PORT)->EnableWindow(FALSE);
 		GetDlgItem(IDC_BT_LISTEN)->EnableWindow(FALSE);
-		GetDlgItem(IDC_BT_STARTGAME)->EnableWindow(TRUE);
-		GetDlgItem(IDC_BT_STARTGAME)->SetWindowText(_T("Stop Game"));
+		GetDlgItem(IDC_BT_STARTGAME)->EnableWindow(FALSE);
+		//GetDlgItem(IDC_BT_STARTGAME)->SetWindowText(_T("Stop Game"));
 		break;
 
 	default:
@@ -157,14 +157,15 @@ void CGameSevDlg::OnBnClickedBtStartgame()
 		KillTimer(1);
 		m_pGameMgr->StopGame();
 		m_pGameMgr->FillGrid(m_ListCtrlClient, m_ListCtrlGame);
-		UpdateData(FALSE);
 	}
 	else if (m_pGameMgr->GetServerState() == Game::IGameMgr::SEV_LISTEN)
 	{
 		if (m_pGameMgr->StartGame())
 		{
+			m_ListCtrlClient.DeleteAllItems();
+			m_ListCtrlGame.DeleteAllItems();
 			SetTimer(1, 1000, NULL);
-			SetTimer(2, 500, NULL);
+			SetTimer(2, 50, NULL);
 		}
 		else
 		{
@@ -186,4 +187,10 @@ void CGameSevDlg::OnTimer(UINT_PTR nIDEvent)
 		m_pGameMgr->OnTimer100MillSec();
 	}
 	CDialog::OnTimer(nIDEvent);
+}
+
+
+void CGameSevDlg::OnBnClickedBtRestartgame()
+{
+	OnCancel();
 }

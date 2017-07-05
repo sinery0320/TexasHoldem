@@ -62,10 +62,13 @@ n byte  values
 //class IClient;
 class CGameSevDlg;
 namespace TCP{
+	class CClientTcp;
 	class CServerTcp : public CSocket
 	{
 	public:
 		enum{
+			CLIENT_MAX_COUNT = 24,
+
 			DATA_MIN_SIZE = 8,
 			DATA_MAX_SIZE = 1024,
 			DATA_BUF_SIZE = 2048,
@@ -96,6 +99,7 @@ namespace TCP{
 
 		virtual void OnConnect(int nErrorCode);
 		virtual void OnAccept(int nErrorCode);
+		void OnClientDisconnect(CClientTcp *pClientTcp);
 		int CreateTcp(unsigned short wPort);    // return 0 success, others failed
 	};
 }

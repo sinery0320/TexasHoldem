@@ -52,7 +52,9 @@
     <ClCompile Include="TexasPokerResult.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="GameInfoDlg.cpp" />
+    <ClCompile Include="GameInfoDlg.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Art.h">
@@ -112,11 +114,15 @@
     <ClInclude Include="TexasPokerResult.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="GameInfoDlg.h" />
+    <ClInclude Include="GameInfoDlg.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <Image Include="res\bitmap1.bmp" />
     <Image Include="res\GameServer.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="res\puke.bmp">
       <Filter>Resource Files</Filter>
     </Image>
   </ItemGroup>

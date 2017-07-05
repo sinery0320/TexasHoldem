@@ -69,6 +69,22 @@ void CTexasPokerMgr::CreateClient(TCP::CClientTcp* tcp)
 	m_ltClient.push_back(pClient);
 }
 
+void CTexasPokerMgr::OnClientDisconnect(TCP::CClientTcp* tcp)
+{
+	if (m_nGameState == GM_INIT || m_nGameState == GM_GAME)
+	{
+		for (auto pClient : m_ltClient)
+		{
+			if (pClient->GetTcp() == tcp)
+			{
+				auto client = (CTexasPokerClient *)pClient.get();
+				client->ChangeState(IGameMgr::REQ_GAMEOVER, _T("This connect disconnected"));
+				return;
+			}
+		}
+	}
+}
+
 void CTexasPokerMgr::ReSortClient()
 {
 	// reset client id
@@ -101,7 +117,7 @@ bool CTexasPokerMgr::StartGame()
 	m_nCurID = 0;		// current client id
 	m_vtGame.clear();
 	m_ltLoserID.clear();
-	m_nGameState = GM_IDEL;
+	m_nGameState = GM_INIT;
 	return true;
 }
 
@@ -140,7 +156,6 @@ void CTexasPokerMgr::OnTimer100MillSec()
 	switch (m_nGameState)
 	{
 	case GM_IDEL:
-		m_nGameState = GM_INIT;
 		break;
 
 	case GM_INIT:
@@ -162,6 +177,11 @@ void CTexasPokerMgr::OnTimer100MillSec()
 				m_nGameState = GM_END;
 				break;
 			}
+			else if (m_vtGame.size() >= GAME_MAX)
+			{
+				m_nGameState = GM_END;
+				break;
+			}
 			game = std::shared_ptr<CTexasGame>(new CTexasGame(this, m_vtGame.size()));
 			if (!game->InitGame())
 			{
@@ -174,6 +194,9 @@ void CTexasPokerMgr::OnTimer100MillSec()
 		break;
 
 	case GM_END:
+		m_nGameState = GM_IDEL;
+		OnGameOver();
+		ShowResult();
 		break;
 	}
 }
@@ -185,3 +208,43 @@ std::shared_ptr<CTexasGame> CTexasPokerMgr::GetCurrentGame()
 		return p;
 	return m_vtGame.back();
 }
+
+void CTexasPokerMgr::ShowResult()
+{
+	std::list<std::shared_ptr<IClient>> ltClient;
+
+	// get winners
+	for (auto c : m_ltClient)
+	{
+		if (!c->IsClientGameOver())
+			ltClient.push_back(c);
+	}
+	if (ltClient.size() > 1)
+	{
+		ltClient.sort([this](std::shared_ptr<IClient> lth, std::shared_ptr<IClient> rth)->bool
+		{
+			return ((CTexasPokerClient *)lth.get())->GetCurrentMoney() > ((CTexasPokerClient *)rth.get())->GetCurrentMoney();
+		});
+	}
+
+	// get losers
+	for (auto iter = m_ltLoserID.rbegin(); iter != m_ltLoserID.rend(); iter++)
+	{
+		ltClient.push_back(m_vtClient[*iter]);
+	}
+
+	// get result string
+	CString strResult, str;
+	strResult = _T("The game is over, below is the result: \r\n\r\n");
+	int i = 0;
+	for (auto pClient : ltClient)
+	{
+		auto client = (CTexasPokerClient *)pClient.get();
+		str.Format(_T("No. %d, ID is %d, Current money %d"), ++i, client->GetID(), client->GetCurrentMoney());
+		strResult = strResult + str + _T("\r\n");
+	}
+
+	HWND h = (::AfxGetMainWnd() != NULL) ? ::AfxGetMainWnd()->GetSafeHwnd() : NULL;
+	MessageBox(h, strResult, _T("Result"), MB_OK | MB_ICONINFORMATION);
+}
+

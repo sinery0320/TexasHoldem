@@ -39,6 +39,7 @@ namespace Game{
 			virtual bool StartGame();
 			virtual void StopGame();
 			virtual void CreateClient(TCP::CClientTcp* tcp);
+			virtual void OnClientDisconnect(TCP::CClientTcp* tcp){ UNREFERENCED_PARAMETER(tcp); }
 			virtual void OnTimer100MillSec();
 
 		private:
