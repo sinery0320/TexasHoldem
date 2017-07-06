@@ -11,7 +11,7 @@ namespace Game{
 			CTexasPokerMgr* m_Mgr;
 			int m_nClientTotalMoney;
 			int m_nCurrentMoney;	// Current game, the money this client have bet
-			int m_nGameState;
+			int m_nClientGameState;
 			int m_nBetMoney;		// Bet money in one game
 			bool m_bGiveUp;			// If give up this one game
 			byte m_poker[5];		// first 2 are hide, behind 3 are show
@@ -19,6 +19,8 @@ namespace Game{
 			CString m_strReason;	// Why you game over
 			//int m_nLoserNumber;		// Winner is -1
 			int m_nNumber;			// Winner is -1
+
+			SYSTEMTIME m_CmdTime;	// for check over time
 
 		public:
 			CTexasPokerClient(CTexasPokerMgr* mgr);
@@ -33,29 +35,30 @@ namespace Game{
 
 			int GetTotalMoney(){ return m_nClientTotalMoney; }
 			int GetCurrentMoney(){ return m_nCurrentMoney; }
-			int GetGameState(){ return m_nGameState; }
+			int GetClientGameState(){ return m_nClientGameState; }
 			int GetBetMoney(){ return m_nBetMoney; }
+			int GetNumber(){ return m_nNumber; }
 			bool IsGiveUp(){ return m_bGiveUp; }
 			byte* GetPokers(){ return m_poker; }
 
 		public:
-			void OnTimeOver();
+			virtual void OnCheckOverTime();
 			void CheckGameOver();
 			virtual CString GetInfoStr();
 			virtual void InitData();
 			virtual void InitOneGame();
 			virtual void WinTheGame(int money);
 			virtual bool IsClientGameOver();
-			virtual int SendInitRequest();
+			virtual void SendInitRequest();
 			virtual void OnCmdRespond(byte *pData, int count);
 			void SendPokerRequest(std::vector<byte> pokers, int banker, int gameid);
 			void SendBetRequest(int nMax, int nPrevBet, int nYourBet, int nTal, CString strAllBet);
 			void SendResultRequest(bool bWin, int nTal, CString betInfo);
-			void SendGameOver(/*int nNumber, CString strReason*/);
+			void SendGameOver(CString strProcess);
 			void ChangeState(int state, CString strReason = _T(""));
 
 		private:
-			bool OnBet(byte *data, int len);
+			void OnBet(byte *data, int len);
 		};
 	}
 }

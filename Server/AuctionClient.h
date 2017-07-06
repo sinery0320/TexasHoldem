@@ -39,7 +39,7 @@ namespace Game{
 			int GetAllValue();
 			void OnTimeOver();
 
-			bool SendInitRequest(int artCount, int clientCount);
+			void SendInitRequest(int artCount, int clientCount);
 
 			int RequestForArt(std::shared_ptr<CArt> art, int auctionTimes);
 			//void OnRequestForArt(byte *pData, int count);

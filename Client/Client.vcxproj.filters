@@ -48,6 +48,9 @@
     <ClInclude Include="PokerResult.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="PackageDlg.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -72,6 +75,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="PokerResult.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="PackageDlg.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

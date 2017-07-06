@@ -25,15 +25,14 @@ void CAuctionClient::OnTimeOver()
 }
 
 // if name is not empty, means this command is done
-bool CAuctionClient::SendInitRequest(int artCount, int clientCount)
+void CAuctionClient::SendInitRequest(int artCount, int clientCount)
 {
-	if (!GetName().IsEmpty())	return true;
+	if (!GetName().IsEmpty())	return;
 	byte pData[16] = { 0 };
 	*(int *)pData = GetID();
 	*(int *)&pData[4] = m_nTotalMoney;
 	*(int *)&pData[8] = artCount;
 	*(int *)&pData[12] = clientCount;
-	return true;
 }
 
 //void CAuctionClient::OnInitClientInfoReturn(byte *pData, int count)

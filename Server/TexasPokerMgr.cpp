@@ -62,6 +62,15 @@ void CTexasPokerMgr::ShowGameInfo(int gameID)
 	game->ShowInfo();
 }
 
+void CTexasPokerMgr::GetProcessInfo(CString& strProcess)
+{
+	for (auto game : m_vtGame)
+	{
+		game->GetProcessInfo(strProcess);
+		strProcess += _T("\r\n");
+	}
+}
+
 void CTexasPokerMgr::CreateClient(TCP::CClientTcp* tcp)
 {
 	std::shared_ptr<IClient> pClient = std::shared_ptr<IClient>(new CTexasPokerClient(this));
@@ -151,9 +160,16 @@ bool CTexasPokerMgr::CheckGameOver()
 	return nCount < 2;
 }
 
-void CTexasPokerMgr::OnTimer100MillSec()
+void CTexasPokerMgr::OnTimer2Work()
 {
-	bool bOK = true;
+	// check all client for over time
+	for (auto client : m_ltClient)
+	{
+		client->OnCheckOverTime();
+	}
+
+	// check all games
+	//bool bOK = true;
 	std::shared_ptr<CTexasGame> game;
 	switch (m_nGameState)
 	{
@@ -163,11 +179,16 @@ void CTexasPokerMgr::OnTimer100MillSec()
 	case GM_INIT:
 		for (std::shared_ptr<Game::IClient> pClient : m_ltClient)
 		{
-			int nState = pClient->SendInitRequest();
-			if (nState != Game::IGameMgr::REQ_DONE && nState != Game::IGameMgr::REQ_OVERTIME)
-				bOK = false;
+			pClient->SendInitRequest();
 		}
-		if (bOK)  m_nGameState = GM_GAME;
+		m_nGameState = GM_INITWAIT;
+		break;
+
+	case GM_INITWAIT:
+		if (CheckAllClientReturned())
+		{
+			m_nGameState = GM_GAME;
+		}
 		break;
 
 	case GM_GAME:
@@ -176,18 +197,18 @@ void CTexasPokerMgr::OnTimer100MillSec()
 		{
 			if (CheckGameOver())
 			{
-				m_nGameState = GM_END;
+				m_nGameState = GM_SENDRESULT;
 				break;
 			}
 			else if (m_vtGame.size() >= GAME_MAX)
 			{
-				m_nGameState = GM_END;
+				m_nGameState = GM_SENDRESULT;
 				break;
 			}
 			game = std::shared_ptr<CTexasGame>(new CTexasGame(this, m_vtGame.size()));
 			if (!game->InitGame())
 			{
-				m_nGameState = GM_END;
+				m_nGameState = GM_SENDRESULT;
 				break;
 			}
 			m_vtGame.push_back(game);
@@ -195,12 +216,44 @@ void CTexasPokerMgr::OnTimer100MillSec()
 		game->PlayGame();
 		break;
 
-	case GM_END:
-		m_nGameState = GM_IDEL;
+	case GM_SENDRESULT:
+		m_nGameState = GM_END;
 		GetGameResult();
-		OnGameOver();
+		break;
+
+	case GM_END:
+		if (CheckAllClientReturned())
+		{
+			m_nGameState = GM_IDEL;
+			OnGameOver();
+		}
 		break;
 	}
+}
+
+bool CTexasPokerMgr::CheckOneClientReturned(int id)
+{
+	auto pClient = m_vtClient[id];
+	auto client = (CTexasPokerClient *)pClient.get();
+
+	//if (client->IsClientGameOver())				return true;
+	//if (client->IsGiveUp())						return true;
+	if (client->GetClientGameState() != REQ_WAIT)	return true;
+	return false;
+}
+
+bool CTexasPokerMgr::CheckAllClientReturned()
+{
+	bool bRet = true;
+	for (int i = 0; i < (int)m_vtClient.size(); i++)
+	{
+		if (!CheckOneClientReturned(i))
+		{
+			bRet = false;
+			break;
+		}
+	}
+	return bRet;
 }
 
 std::shared_ptr<CTexasGame> CTexasPokerMgr::GetCurrentGame()
@@ -213,12 +266,6 @@ std::shared_ptr<CTexasGame> CTexasPokerMgr::GetCurrentGame()
 
 void CTexasPokerMgr::OnGameOver()
 {
-	for (auto pClient : m_ltClient)
-	{
-		auto client = (CTexasPokerClient *)pClient.get();
-		client->SendGameOver();
-	}
-
 	IGameMgr::OnGameOver();
 }
 
@@ -260,5 +307,16 @@ void CTexasPokerMgr::GetGameResult()
 
 	HWND h = (::AfxGetMainWnd() != NULL) ? ::AfxGetMainWnd()->GetSafeHwnd() : NULL;
 	MessageBox(h, strResult, _T("Result"), MB_OK | MB_ICONINFORMATION);
+
+	// send result to all client
+	CString strProcess;
+	//GetProcessInfo(strProcess);
+
+	for (auto pClient : m_ltClient)
+	{
+		auto client = (CTexasPokerClient *)pClient.get();
+		if (client->GetClientGameState() != IGameMgr::REQ_OVERTIME)
+			client->SendGameOver(strProcess);
+	}
 }
 

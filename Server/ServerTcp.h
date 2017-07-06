@@ -71,7 +71,7 @@ namespace TCP{
 
 			DATA_MIN_SIZE = 8,
 			DATA_MAX_SIZE = 1024,
-			DATA_BUF_SIZE = 2048,
+			DATA_BUF_SIZE = 20480,
 
 			// require type (2 byte)
 			DATA_SEND = 0x0001,

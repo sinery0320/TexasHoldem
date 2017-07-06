@@ -32,6 +32,7 @@ void CGameMgr::Init()
 	m_nBetUnitMoney = 0;
 	//m_nBetMoney = 0;
 	m_vtGame.clear();
+	m_pDlg->ClearistCtrl();
 }
 
 BOOL CGameMgr::StartGame(int nIP, int nPort)
@@ -59,6 +60,7 @@ BOOL CGameMgr::StopGame()
 	m_nBetUnitMoney = 0;
 	//m_nBetMoney = 0;
 	m_vtGame.clear();
+	m_pDlg->ClearistCtrl();
 	return TRUE;
 }
 
@@ -88,20 +90,18 @@ void CGameMgr::AddWinMoney(int money)
 	m_nCurrentMoney += money;
 }
 
-BOOL CGameMgr::IsGiveUp()
-{
-	return m_pDlg->m_bGiveUp;
-}
-
 void CGameMgr::FillGrid(CListCtrl& lcGame)
 {
 	CString str;
-	lcGame.DeleteAllItems();
 	for (int i = 0; i < (int)m_vtGame.size(); i++)
 	{
 		std::shared_ptr<CGame> game = m_vtGame[i];
 		str.Format(_T("%d"), game->GetGameID());
-		lcGame.InsertItem(i, str);
+		if (lcGame.GetItemCount() <= i)
+		{
+			str.Format(_T("%d"), game->GetGameID());
+			lcGame.InsertItem(i, str);
+		}
 		lcGame.SetItemText(i, CClientDlg::COL_INFO, game->GetInfoStr());
 	}
 }
@@ -137,5 +137,13 @@ int CGameMgr::RequireBetMoney(int nMax, int nPrevBet, int nMyBet, int nTotal, CS
 
 void CGameMgr::OnOneGameOver(bool bIfWin, int nWinMoney, CString strResultInfo)
 {
-	return Player()->OnOneGameOver(bIfWin, nWinMoney, strResultInfo);
+	Player()->OnOneGameOver(bIfWin, nWinMoney, strResultInfo);
 }
+
+void CGameMgr::OnAllGameOver(int nNumber, int nCurMoney, CString strProcess)
+{
+	UNREFERENCED_PARAMETER(strProcess);
+	m_nCurrentMoney = nCurMoney;
+	Player()->OnAllGameOver(nNumber);
+}
+

@@ -43,4 +43,5 @@ public:
 	afx_msg void OnBnClickedBtStartgame();
 	afx_msg void OnTimer(UINT_PTR nIDEvent);
 	afx_msg void OnBnClickedBtRestartgame();
+	afx_msg void OnBnClickedBtExport();
 };

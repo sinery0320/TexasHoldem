@@ -26,11 +26,11 @@ CString CTexasPokerClient::GetInfoStr()
 	CString strInfo;
 	strInfo.Format(_T("curmoney:%d, state:%d"),
 		m_nCurrentMoney,
-		m_nGameState);
-	if (m_nNumber != -1)
+		m_nClientGameState);
+	if (GetNumber() != -1)
 	{
 		CString str;
-		str.Format(_T(", number:%d"), m_nNumber);
+		str.Format(_T(", number:%d"), GetNumber());
 		strInfo += str;
 	}
 	if (!m_strReason.IsEmpty())
@@ -42,26 +42,37 @@ CString CTexasPokerClient::GetInfoStr()
 
 bool CTexasPokerClient::IsClientGameOver()
 {
-	return m_nNumber != -1 ||
+	return GetNumber() != -1 ||
 		m_nCurrentMoney < 0 ||
-		m_nGameState == IGameMgr::REQ_GAMEOVER;
+		GetClientGameState() == IGameMgr::REQ_GAMEOVER ||
+		GetClientGameState() == IGameMgr::REQ_OVERTIME;
 }
 
 void CTexasPokerClient::CheckGameOver()
 {
 	if (m_nCurrentMoney < CTexasPokerMgr::GAME_MIN_MONEY)
 	{
-		CString str;
-		str.Format(_T("The current money %d is limit"), m_nCurrentMoney);
-		ChangeState(IGameMgr::REQ_GAMEOVER, str);
+		CString strErr;
+		int id = m_Mgr->GetCurrentGame() ? m_Mgr->GetCurrentGame()->GetGameID() : -1;
+		strErr.Format(_T("Game id %d, The current money %d is limit."), id, m_nCurrentMoney);
+		ChangeState(IGameMgr::REQ_GAMEOVER, strErr);
 	}
 }
 
-void CTexasPokerClient::OnTimeOver()
+void CTexasPokerClient::OnCheckOverTime()
 {
-	if (m_nGameState == IGameMgr::REQ_WAIT)
+	if (m_nClientGameState == IGameMgr::REQ_WAIT)
 	{
-		ChangeState(IGameMgr::REQ_OVERTIME);
+		SYSTEMTIME stNow;
+		::GetLocalTime(&stNow);
+
+		COleDateTime dTimeB(m_CmdTime);
+		COleDateTime dTimeE(stNow);
+		COleDateTimeSpan dTimeSpan = dTimeE - dTimeB;
+		double nSecondSpan = dTimeSpan.GetTotalSeconds();
+
+		if (nSecondSpan >= CTexasPokerMgr::GAME_OVERTIME_SEC)
+			ChangeState(IGameMgr::REQ_OVERTIME);
 	}
 }
 
@@ -69,18 +80,19 @@ void CTexasPokerClient::InitData()
 {
 	IClient::InitData();
 	m_nBetMoney = 0;
-	m_nClientTotalMoney = 30;//10000)
+	m_nClientTotalMoney = CTexasPokerMgr::GAME_CLIENT_MONEY_DEF;
 	m_nCurrentMoney = m_nClientTotalMoney;
 	m_bGiveUp = false;
-	//m_nLoserNumber = -1;
-	m_nNumber = -1;
+	SetNumber(-1);
 	m_strReason.Empty();
 	ChangeState(IGameMgr::REQ_IDLE);
 }
 
 void CTexasPokerClient::InitOneGame()
 {
-	ChangeState(IGameMgr::REQ_IDLE);
+	if (GetClientGameState() != IGameMgr::REQ_GAMEOVER &&
+		GetClientGameState() != IGameMgr::REQ_OVERTIME)
+		ChangeState(IGameMgr::REQ_IDLE);
 }
 
 void CTexasPokerClient::WinTheGame(int money)
@@ -90,7 +102,8 @@ void CTexasPokerClient::WinTheGame(int money)
 
 void CTexasPokerClient::ChangeState(int state, CString strReason)
 {
-	if (m_nGameState == state)	return;
+	if (GetClientGameState() == state)	return;
+	m_nClientGameState = state;
 	switch (state)
 	{
 	case IGameMgr::REQ_IDLE:
@@ -101,13 +114,16 @@ void CTexasPokerClient::ChangeState(int state, CString strReason)
 		break;
 
 	case IGameMgr::REQ_WAIT:
+		::GetLocalTime(&m_CmdTime);	// for check over time
 		break;
 
 	case IGameMgr::REQ_DONE:
+		m_nCurrentCmd = -1;
 		break;
 
 	case IGameMgr::REQ_OVERTIME:
-		ChangeState(IGameMgr::REQ_GAMEOVER, _T("Over time"));
+		//ChangeState(IGameMgr::REQ_GAMEOVER, _T("Over time"));
+		m_strReason = _T("Over time");
 		break;
 
 	case IGameMgr::REQ_GAMEOVER:
@@ -115,15 +131,14 @@ void CTexasPokerClient::ChangeState(int state, CString strReason)
 		m_strReason = strReason;
 		break;
 	}
-	m_nGameState = state;
 }
 
 
 void CTexasPokerClient::OnCmdRespond(byte *pData, int count)
 {
-	if (count < 8)								return;
-	if (m_nCurrentCmd != *(short *)&pData[2])	return;
-	if (m_nGameState != IGameMgr::REQ_WAIT)		return;
+	if (count < 8)									return;
+	if (m_nCurrentCmd != *(short *)&pData[2])		return;
+	if (GetClientGameState() != IGameMgr::REQ_WAIT)	return;
 
 	switch (m_nCurrentCmd)
 	{
@@ -140,8 +155,8 @@ void CTexasPokerClient::OnCmdRespond(byte *pData, int count)
 		break;
 
 	case CMD_BET:
-		if (OnBet(&pData[8], count - 8))
-			ChangeState(IGameMgr::REQ_DONE);
+		ChangeState(IGameMgr::REQ_DONE);
+		OnBet(&pData[8], count - 8);
 		break;
 
 	case CMD_GIVERESULT:
@@ -158,9 +173,16 @@ void CTexasPokerClient::OnCmdRespond(byte *pData, int count)
 	}
 }
 
-bool CTexasPokerClient::OnBet(byte *data, int len)
+void CTexasPokerClient::OnBet(byte *data, int len)
 {
-	if (len != 4)	return false;
+	if (len != 4)
+	{
+		CString strErr;
+		int id = m_Mgr->GetCurrentGame() ? m_Mgr->GetCurrentGame()->GetGameID() : -1;
+		strErr.Format(_T("Game id %d, the bytes returned is wrong."), id);
+		ChangeState(IGameMgr::REQ_GAMEOVER, strErr);
+		return;
+	}
 	int nMoney = *(int *)data;
 	if (nMoney == -1)
 	{
@@ -181,7 +203,7 @@ bool CTexasPokerClient::OnBet(byte *data, int len)
 		if (!game->AddBet(GetID(), nMoney, strReason))	// return false mean illegal value, this client game over
 		{
 			ChangeState(IGameMgr::REQ_GAMEOVER, strReason);
-			return false;
+			return;
 		}
 		else
 		{
@@ -190,30 +212,26 @@ bool CTexasPokerClient::OnBet(byte *data, int len)
 			game->AddClientInfo(GetID(), strInfo);
 		}
 	}
-	return true;
+	return;
 }
 
-int CTexasPokerClient::SendInitRequest()
+void CTexasPokerClient::SendInitRequest()
 {
-	if (m_nGameState == IGameMgr::REQ_IDLE)
-	{
-		int byLen = 8 + 16;
-		byte *pData = new byte[byLen];
-		ZeroMemory(pData, byLen);
+	int byLen = 8 + 16;
+	byte *pData = new byte[byLen];
+	ZeroMemory(pData, byLen);
 
-		m_nCurrentCmd = CMD_INIT;
-		InitHead(pData, m_nCurrentCmd, short(byLen - 8));
+	m_nCurrentCmd = CMD_INIT;
+	InitHead(pData, m_nCurrentCmd, byLen - 8);
 
-		*(int*)&pData[8 + 0] = GetID();							// 
-		*(int*)&pData[8 + 4] = GetTotalMoney();					// 
-		*(int*)&pData[8 + 8] = (int)m_Mgr->m_ltClient.size();	// 
-		*(int*)&pData[8 + 12] = CTexasPokerMgr::GAME_UNIT_MONEY;	// 
+	*(int*)&pData[8 + 0] = GetID();							// 
+	*(int*)&pData[8 + 4] = GetTotalMoney();					// 
+	*(int*)&pData[8 + 8] = (int)m_Mgr->m_ltClient.size();	// 
+	*(int*)&pData[8 + 12] = CTexasPokerMgr::GAME_UNIT_MONEY;	// 
 
-		ChangeState(IGameMgr::REQ_WAIT);
-		SendData(pData, byLen);
-		delete[] pData;
-	}
-	return m_nGameState;
+	ChangeState(IGameMgr::REQ_WAIT);
+	SendData(pData, byLen);
+	delete[] pData;
 }
 
 void CTexasPokerClient::SendPokerRequest(std::vector<byte> pokers, int banker, int gameid)
@@ -224,7 +242,7 @@ void CTexasPokerClient::SendPokerRequest(std::vector<byte> pokers, int banker, i
 	ZeroMemory(pData, byLen);
 
 	m_nCurrentCmd = CMD_SENDPOKER;
-	InitHead(pData, m_nCurrentCmd, short(byLen - 8));
+	InitHead(pData, m_nCurrentCmd, byLen - 8);
 
 	pData[8 + 0] = pokers[0];					// 
 	pData[8 + 1] = pokers[1];					// 
@@ -249,7 +267,7 @@ void CTexasPokerClient::SendBetRequest(int nMax, int nPrevBet, int nYourBet, int
 	ZeroMemory(pData, byLen);
 
 	m_nCurrentCmd = CMD_BET;
-	InitHead(pData, m_nCurrentCmd, (short)(byLen - 8));
+	InitHead(pData, m_nCurrentCmd, byLen - 8);
 
 	*(int*)&pData[8 + 0] = nMax;				// 
 	*(int*)&pData[8 + 4] = nPrevBet;			// 
@@ -270,7 +288,7 @@ void CTexasPokerClient::SendResultRequest(bool bWin, int nTal, CString betInfo)
 	ZeroMemory(pData, byLen);
 
 	m_nCurrentCmd = CMD_GIVERESULT;
-	InitHead(pData, m_nCurrentCmd, (short)(byLen - 8));
+	InitHead(pData, m_nCurrentCmd, byLen - 8);
 
 	*(int*)&pData[8 + 0] = bWin ? 1 : 0;				// 
 	*(int*)&pData[8 + 4] = nTal;						// 
@@ -281,20 +299,23 @@ void CTexasPokerClient::SendResultRequest(bool bWin, int nTal, CString betInfo)
 	delete[] pData;
 }
 
-void CTexasPokerClient::SendGameOver(/*int nNumber, CString strReason*/)
+void CTexasPokerClient::SendGameOver(CString strProcess)
 {
-	int nSize = m_strReason.GetLength() * sizeof(TCHAR);
-	int byLen = 8 + 4 + nSize + 2;
+	int nSize = strProcess.GetLength() * sizeof(TCHAR);
+	int byLen = 8 + 8 + nSize + 2;
 	byte *pData = new byte[byLen];
 	ZeroMemory(pData, byLen);
 
 	m_nCurrentCmd = CMD_GAMEOVER;
-	InitHead(pData, m_nCurrentCmd, (short)(byLen - 8));
+	InitHead(pData, m_nCurrentCmd, byLen - 8);
 
-	*(int*)&pData[8 + 0] = m_nNumber;						// 
-	memcpy(&pData[8 + 4], m_strReason.GetBuffer(), nSize);	//
+	*(int*)&pData[8 + 0] = GetNumber();						// 
+	*(int*)&pData[8 + 4] = GetCurrentMoney();				// 
+	memcpy(&pData[8 + 8], strProcess.GetBuffer(), nSize);	//
 
 	ChangeState(IGameMgr::REQ_WAIT);
 	SendData(pData, byLen);
 	delete[] pData;
 }
+
+

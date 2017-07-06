@@ -19,19 +19,19 @@ void IClient::SetTcp(TCP::CClientTcp *pTcp)
 		pTcp->InitResponseFun(this);
 }
 
-void IClient::InitHead(byte* pData, short cmdid, short datalen)
+void IClient::InitHead(byte* pData, short cmdid, int datalen)
 {
 	*(short*)&pData[0] = TCP::CServerTcp::DATA_SEND;	// 1:send, 2:return
-	*(short*)&pData[2] = cmdid;		// command id
-	*(short*)&pData[4] = 0;			// error type, 0-no error
-	*(short*)&pData[6] = datalen;	// data len
+	*(short*)&pData[2] = cmdid;							// command id
+	*(int*)&pData[4] = datalen;							// byte count
 }
 
 void IClient::ResponseFun(byte *pData, int count)
 {
 	if (count < 8)											return;
 	if (*(short*)&pData[0] != TCP::CServerTcp::DATA_BACK)	return;
-	if (*(short*)&pData[4] != 0)							return;	// It's error
+	if (*(int*)&pData[4] > (count - 8))						return;	// It's error
+	ASSERT(*(int*)&pData[4] <= (count - 8));
 	OnCmdRespond(pData, count);
 }
 

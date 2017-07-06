@@ -65,13 +65,14 @@ void IGameMgr::OnGameOver()
 	m_Dlg->OnStateChanged();
 }
 
-void IGameMgr::OnTimer100MSec()
+void IGameMgr::OnTimer(int nEventID)
 {
+	UNREFERENCED_PARAMETER(nEventID);
 	if (m_bInTimer)						return;
 	if (m_nServerState != SEV_START)	return;
 	if (m_ltClient.empty())				return;
 	m_bInTimer = true;
-	OnTimer100MillSec();
+	OnTimer2Work();
 	m_bInTimer = false;
 }
 

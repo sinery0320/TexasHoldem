@@ -6,6 +6,7 @@
 #include "Client.h"
 #include "ClientDlg.h"
 #include "afxdialogex.h"
+#include "PackageDlg.h"
 
 #include "GameMgr.h"
 
@@ -19,12 +20,11 @@ CClientDlg::CClientDlg(CWnd* pParent /*=NULL*/)
 	: CDialogEx(CClientDlg::IDD, pParent)
 	//, m_nIP(16777343)
 	, m_nIP(2130706433)
-	, m_nPort(23456)
+	, m_nPort(2345)
 	, m_nMoneyTotal(0)
 	, m_nMoneyCurrent(0)
 	, m_nID(0)
 	, m_nPlayerCount(0)
-	, m_bGiveUp(FALSE)
 	, m_CountSend(0)
 	, m_CountRcv(0)
 {
@@ -42,7 +42,6 @@ void CClientDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Text(pDX, IDC_EDIT_ID, m_nID);
 	DDX_Text(pDX, IDC_EDIT_COUNT, m_nPlayerCount);
 	DDX_Control(pDX, IDC_LIST, m_ListCtrl);
-	DDX_Check(pDX, IDC_CK_GIVEUP, m_bGiveUp);
 	DDX_Text(pDX, IDC_EDIT_SEND, m_CountSend);
 	DDX_Text(pDX, IDC_EDIT_RCV, m_CountRcv);
 }
@@ -54,7 +53,7 @@ BEGIN_MESSAGE_MAP(CClientDlg, CDialogEx)
 	ON_WM_QUERYDRAGICON()
 	ON_BN_CLICKED(IDOK, &CClientDlg::OnBnClickedOk)
 	ON_BN_CLICKED(IDQUIT, &CClientDlg::OnBnClickedQuit)
-	ON_BN_CLICKED(IDC_CK_GIVEUP, &CClientDlg::OnBnClickedCkGiveup)
+	ON_BN_CLICKED(ID_SHOW_PACK, &CClientDlg::OnBnClickedShowPack)
 END_MESSAGE_MAP()
 
 
@@ -84,6 +83,11 @@ BOOL CClientDlg::OnInitDialog()
 	GetDlgItem(IDC_EDIT_PORT)->EnableWindow(TRUE);
 	GetDlgItem(IDOK)->EnableWindow(TRUE);
 	GetDlgItem(IDQUIT)->EnableWindow(FALSE);
+
+	CString str;
+	GetWindowText(str);
+	str = str + _T(" - ") + m_pMgr->GetName();
+	SetWindowText(str);
 
 	return TRUE;  // return TRUE  unless you set the focus to a control
 }
@@ -173,7 +177,17 @@ void CClientDlg::OnTimer(UINT_PTR nIDEvent)
 	}
 }
 
-void CClientDlg::OnBnClickedCkGiveup()
+void CClientDlg::OnBnClickedShowPack()
 {
-	UpdateData(TRUE);
+	CPackageDlg dlg;
+	dlg.m_strPackage = m_pMgr->GetPackage();
+	dlg.DoModal();
+}
+
+void CClientDlg::ClearistCtrl()
+{
+	if (GetSafeHwnd())
+	{
+		m_ListCtrl.DeleteAllItems();
+	}
 }

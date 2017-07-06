@@ -44,6 +44,7 @@ namespace Game{
 			void AddClientInfo(int id, CString strClientInfo);
 			void ShowInfo();
 			void ShowAllClientInfo(CListCtrl& listCtrl);
+			void GetProcessInfo(CString& strProcess);
 
 		private:
 			void SendPoker();				// Send pokers to every client (not quit one)

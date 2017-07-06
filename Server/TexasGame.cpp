@@ -51,6 +51,11 @@ CString CTexasGame::GetInfoStr()
 // Init game, make sure who is the banker in this game
 bool CTexasGame::InitGame()
 {
+	for (std::shared_ptr<IClient> client : m_Mgr->m_ltClient)
+	{
+		client->InitOneGame();
+	}
+
 	CheckAllClient();
 
 	if (CheckGameOver())
@@ -66,10 +71,7 @@ bool CTexasGame::InitGame()
 
 	ASSERT(m_nBankerID >= 0);
 
-	for (std::shared_ptr<IClient> client : m_Mgr->m_ltClient)
-	{
-		client->InitOneGame();
-	}
+
 	
 	m_nGameState = PS_SEND_POKER;
 	return true;
@@ -91,7 +93,7 @@ void CTexasGame::PlayGame()
 		break;
 
 	case PS_SEND_POKER_WAIT:
-		if (CheckAllClientReturned())
+		if (m_Mgr->CheckAllClientReturned())
 		{
 			m_nGameState = PS_SEND_BET;
 			m_nCurClientID = GetNextID(m_nBankerID);
@@ -107,7 +109,7 @@ void CTexasGame::PlayGame()
 		break;
 
 	case PS_SEND_BET_WAIT:
-		if (CheckOneClientReturned(m_nCurClientID))
+		if (m_Mgr->CheckOneClientReturned(m_nCurClientID))
 		{
 			// check if game over
 			int nCheck = CheckBetOver();
@@ -129,7 +131,7 @@ void CTexasGame::PlayGame()
 		break;
 
 	case PS_GIVE_RESULT_WAIT:
-		if (CheckAllClientReturned())
+		if (m_Mgr->CheckAllClientReturned())
 		{
 			m_nGameState = PS_DONE;
 			for (int i = 0; i < (int)m_Mgr->m_vtClient.size(); i++)
@@ -192,8 +194,8 @@ void CTexasGame::SendPoker()
 		vtpk[0] = GetRandPoker();
 		vtpk[1] = GetRandPoker();
 		client->SendPokerRequest(vtpk, m_nBankerID, GetGameID());
-		AddClientInfo(i, _T("openpoker:") + CTexasPokerResult::GetPokerString(m_vtOpenPoker, 3));
-		AddClientInfo(i, _T("poker:") + CTexasPokerResult::GetPokerString(client->GetPokers()));
+		AddClientInfo(i, _T("opk:") + CTexasPokerResult::GetPokerString(m_vtOpenPoker, 3));
+		AddClientInfo(i, _T("pk:") + CTexasPokerResult::GetPokerString(client->GetPokers()));
 	}
 
 	CString strClientInfo;
@@ -252,7 +254,7 @@ void CTexasGame::SendResult(bool bShow)
 	for (std::shared_ptr<IClient> pClient : m_Mgr->m_vtClient)
 	{
 		CTexasPokerClient *client = (CTexasPokerClient *)pClient.get();
-		str.Format(_T("id:%d, bet:%d, giveup:%d, win:%d"),
+		str.Format(_T("id:%d,bet:%d,gg:%d,win:%d"),
 			client->GetID(),
 			client->GetBetMoney(),
 			client->IsGiveUp() ? 1 : 0,
@@ -261,7 +263,7 @@ void CTexasGame::SendResult(bool bShow)
 		if (bShow && !client->IsClientGameOver())
 		{
 			CString s;
-			s.Format(_T(", pokers:%s"), CTexasPokerResult::GetPokerString(client->GetPokers()));
+			s.Format(_T(",pk:%s"), CTexasPokerResult::GetPokerString(client->GetPokers(), 2));
 			str = str + s;
 		}
 		strAllBet = strAllBet + str + _T("\r\n");
@@ -272,7 +274,9 @@ void CTexasGame::SendResult(bool bShow)
 	{
 		std::shared_ptr<IClient> pClient = m_Mgr->m_vtClient[i];
 		CTexasPokerClient *client = (CTexasPokerClient *)pClient.get();
-		client->SendResultRequest(mpWinner.find(i) != mpWinner.end(), nWinMoney, strAllBet);
+
+		if (client->GetClientGameState() != IGameMgr::REQ_OVERTIME)
+			client->SendResultRequest(mpWinner.find(i) != mpWinner.end(), nWinMoney, strAllBet);
 	}
 	m_nGameState = PS_GIVE_RESULT_WAIT;
 }
@@ -339,32 +343,6 @@ bool CTexasGame::CheckGameOver()
 		return true;
 	}
 	return false;	
-}
-
-bool CTexasGame::CheckOneClientReturned(int id)
-{
-	auto pClient = m_Mgr->m_vtClient[id];
-	auto client = (CTexasPokerClient *)pClient.get();
-
-	if (client->IsClientGameOver())		return true;
-	if (client->IsGiveUp())				return true;
-	if (client->GetGameState() !=
-		IGameMgr::REQ_WAIT)				return true;
-	return false;
-}
-
-bool CTexasGame::CheckAllClientReturned()
-{
-	bool bRet = true;
-	for (int i = 0; i < (int)m_Mgr->m_vtClient.size(); i++)
-	{
-		if (!CheckOneClientReturned(i))
-		{
-			bRet = false;
-			break;
-		}
-	}
-	return bRet;
 }
 
 // 0-not over, 1-over and only one player alive, 2-over and multi player alive
@@ -439,7 +417,9 @@ int CTexasGame::GetMaxBetMoney()
 {
 	int nMax = 2147483647;	// 2^31 - 1
 
-	for (int i = m_nCurClientID; i != m_nBankerID;)
+	//for (int i = m_nCurClientID; i != m_nBankerID;)
+	int i = m_nCurClientID;
+	do
 	{
 		CTexasPokerClient *client = (CTexasPokerClient *)m_Mgr->m_vtClient[i].get();
 		if (!client->IsClientGameOver())
@@ -448,7 +428,7 @@ int CTexasGame::GetMaxBetMoney()
 				nMax = (client->GetCurrentMoney() + client->GetBetMoney());
 		}
 		i = GetNextID(i);
-	}
+	} while (i != m_nCurClientID);
 	return nMax;
 }
 
@@ -509,7 +489,7 @@ CString CTexasGame::GetAllBetAndPoker()
 		if (pClient->IsClientGameOver())	continue;
 		CTexasPokerClient *client = (CTexasPokerClient *)pClient.get();
 
-		str.Format(_T("id:%d,bet:%d\r\n,pokers:%s"), client->GetID(), client->GetBetMoney(), CTexasPokerResult::GetPokerString(client->GetPokers()));
+		str.Format(_T("id:%d,bet:%d\r\n,pk:%s"), client->GetID(), client->GetBetMoney(), CTexasPokerResult::GetPokerString(client->GetPokers()));
 		strAllBet += str;
 	}
 	return strAllBet;
@@ -544,5 +524,20 @@ void CTexasGame::ShowAllClientInfo(CListCtrl& listCtrl)
 		str.Format(_T("%d"), i);
 		listCtrl.InsertItem(i, str);
 		listCtrl.SetItemText(i, 1, m_vtClinetInfo[i]);
+	}
+}
+
+void CTexasGame::GetProcessInfo(CString& strProcess)
+{
+	CString str;
+	str.Format(_T("Game:%d,\r\n"), GetGameID());
+	strProcess += str;
+
+	for (int i = 0; i < (int)m_vtClinetInfo.size(); i++)
+	{
+		str.Format(_T("Client:%d, "), i);
+		strProcess += str;
+		strProcess += m_vtClinetInfo[i];
+		strProcess += _T("\r\n");
 	}
 }

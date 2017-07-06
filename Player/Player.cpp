@@ -11,7 +11,7 @@
 CString CPlayer::GetName()
 {
 	//! Enter your name
-	return _T("");
+	return _T("AI0");
 }
 
 // It's a event at first time
@@ -52,6 +52,11 @@ int CPlayer::RequireBetMoney(int nMax, int nPrevBet, int nMyBet, int nTotal, CSt
 		- nMyBet: The money you have bet in this game
 		- nTotal: How much money already in server for this game
 		- strAllBet: You can get all bet money information from this string
+			- id: client id, from 0
+			- bet: all bet money
+			- gg: if give up, 1-give up
+			- win: if win, 1-win
+			- pk: what is the pokers
 
 		- return: Delta bet money you need bet, you can return -1, or >= 0
 				  -1: Give up this game
@@ -60,7 +65,17 @@ int CPlayer::RequireBetMoney(int nMax, int nPrevBet, int nMyBet, int nTotal, CSt
 		If all players bet the same money (except losers and give ups), server will open all pokers, the biggest will get all money.
 		If all players give up or lose game, only one left, that guy will get all money, but you can't get his pokers.
 	*/
+
+	// AI0 code: only bet the same as previous
 	return nPrevBet - nMyBet;
+
+	// AI1 code: bet 30 at first time, so we can see two round of betting
+	int nDeltaBet = nPrevBet - nMyBet;
+	if (nDeltaBet == 10)	nDeltaBet = 30;
+	return nDeltaBet;
+
+	// AI2 code: give up every time
+	return -1;
 }
 
 // When one game over
@@ -80,3 +95,4 @@ void CPlayer::OnAllGameOver(int number)
 		- number: Your number, from 1, 1 is the final winner
 	*/
 }
+

@@ -25,12 +25,11 @@ CClientTcp::~CClientTcp()
 {
 }
 
-void InitHead(byte* pData, short cmdid, short datalen)
+void InitHead(byte* pData, short cmdid, int datalen)
 {
 	*(short*)&pData[0] = 2;			// 1:send, 2:return
 	*(short*)&pData[2] = cmdid;		// command id
-	*(short*)&pData[4] = 0;			// error type, 0-no error
-	*(short*)&pData[6] = datalen;	// data len
+	*(int*)&pData[4] = datalen;		// data len
 }
 
 BOOL CClientTcp::ConnectTo(CString strIP, UINT uiPort)
@@ -43,25 +42,51 @@ BOOL CClientTcp::ConnectTo(CString strIP, UINT uiPort)
 	return m_bConnect;
 }
 
+struct SPack{
+	int len;
+	byte *p;
+	SPack(int unitLen){
+		p = new byte[unitLen];
+		ZeroMemory(p, unitLen);
+	}
+	~SPack(){ delete[] p; p = NULL; }
+};
+
 void CClientTcp::OnReceive(int nErrorCode)
 {
-	byte data[DATA_BUF_SIZE] = { 0 };
-	int len = Receive(data, DATA_BUF_SIZE);
-	ASSERT(len >= DATA_MIN_SIZE && len <= DATA_MAX_SIZE);
-	if (len < 0)		return;
+	int unitLen = 1024, allLen = 0, index = 0;
+
+	std::list<std::shared_ptr<SPack>> ltPack;
+	while (true)
+	{
+		std::shared_ptr<SPack> sp = std::shared_ptr<SPack>(new SPack(unitLen));
+		sp->len = Receive(sp->p, unitLen);
+		if (sp->len <= 0)		break;
+		allLen += sp->len;
+		ltPack.push_back(sp);
+		if (sp->len < unitLen)	break;	// finish reading
+	}
+	if (allLen <= 0)			return;
+
+	byte *pData = new byte[allLen + 2];
+	ZeroMemory(pData, allLen + 2);
+
+	for (auto sp : ltPack)
+	{
+		memcpy(&pData[index], sp->p, sp->len);
+		index += sp->len;
+	}
 
 	m_Mgr->GetDlg()->m_CountRcv++;
 	m_Mgr->GetDlg()->UpdateData(FALSE);
 
 	// Check head
-	if (data[0] != 1)	return;	// 1:send, 2:return
-	ASSERT((len - 8) >= *(short *)&data[6]);
-	if ((len - 8) > *(short *)&data[6])
+	if (pData[0] != 1)	return;	// 1:send, 2:return
+	ASSERT((allLen - 8) >= *(int *)&pData[4]);
+	if ((allLen - 8) > *(int *)&pData[4])
 	{
-		byte p[1024] = { 0 };
-		int l = len - 8 - *(short *)&data[6];
-		memcpy(p, &data[8 + *(short *)&data[6]], l);
-		
+		int l = allLen - 8 - *(int *)&pData[4];
+		byte *p = &pData[8 + *(int *)&pData[4]];
 		CString str, s;
 		for (int i = 0; i < l; i++)
 		{
@@ -70,31 +95,42 @@ void CClientTcp::OnReceive(int nErrorCode)
 		}
 		MessageBox(NULL, str, _T("Error byte"), MB_OK);
 	}
-	len = 8 + *(short *)&data[6];
+	int dataLen = *(int *)&pData[4];
 
-	switch (*(short *)&data[2])	// command id
+	switch (*(short *)&pData[2])	// command id
 	{
 	case CMD_INIT:
-		OnClientInit(&data[8], len - 8);
+		m_Mgr->ClearPackage();
+		KeepPackage(false, pData, allLen);
+		OnClientInit(&pData[8], dataLen);
 		break;
 
 	case CMD_SENDPOKER:
-		OnReceivePoker(&data[8], len - 8);
+		KeepPackage(false, pData, allLen);
+		OnReceivePoker(&pData[8], dataLen);
 		break;
 
 	case CMD_BET:
-		OnReceiveBetRequest(&data[8], len - 8);
+		KeepPackage(false, pData, allLen);
+		OnReceiveBetRequest(&pData[8], dataLen);
 		break;
 
 	case CMD_GIVERESULT:
-		OnReceiveResult(&data[8], len - 8);
+		KeepPackage(false, pData, allLen);
+		OnReceiveResult(&pData[8], dataLen);
 		break;
 
 	case CMD_GAMEOVER:
-		OnGameOver(&data[8], len - 8);
+		KeepPackage(false, pData, allLen);
+		OnGameOver(&pData[8], dataLen);
+		break;
+
+	default:
+		KeepPackage(false, pData, allLen);
 		break;
 	}
 
+	delete[] pData;
 	CSocket::OnReceive(nErrorCode);
 }
 
@@ -204,8 +240,9 @@ void CClientTcp::OnGameOver(byte *data, int len)
 {
 	auto game = m_Mgr->CurrentGame();
 	int nNumber = *(int *)data;
-	CString strReason((TCHAR*)&data[4]);
-	//MessageBox(NULL, strReason, _T("Game over"), MB_OK | MB_ICONINFORMATION);
+	int nMoney = *(int *)&data[4];
+	CString strProcess((TCHAR*)&data[8]);
+	m_Mgr->OnAllGameOver(nNumber, nMoney, strProcess);
 
 	byte pRet[8] = { 0 };
 	InitHead(pRet, CMD_GAMEOVER, 0);
@@ -216,6 +253,19 @@ void CClientTcp::SendData(byte *data, int len)
 {
 	m_Mgr->GetDlg()->m_CountSend++;
 	m_Mgr->GetDlg()->UpdateData(FALSE);
-
+	KeepPackage(true, data, len);
 	Send(data, len);
+}
+
+void CClientTcp::KeepPackage(bool bSend, byte *data, int len)
+{
+	CString strOut = CGbl::GetCurrentTimeStr();
+	strOut += bSend ? _T(" -> ") : _T(" <- ");
+	CString str;
+	for (int i = 0; i < len; i++)
+	{
+		str.Format(_T("%.2X "), data[i]);
+		strOut += str;
+	}
+	m_Mgr->AddPackage(strOut);
 }

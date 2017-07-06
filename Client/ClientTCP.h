@@ -6,8 +6,8 @@ class CClientTcp : public CSocket
 public:
 	enum{
 		DATA_MIN_SIZE = 8,
-		DATA_MAX_SIZE = 1024,
-		DATA_BUF_SIZE = 2048,
+		//DATA_MAX_SIZE = 1024,
+		//DATA_BUF_SIZE = 2048,
 	};
 
 private:
@@ -21,6 +21,7 @@ private:
 	void OnReceiveResult(byte *data, int len);
 	void OnGameOver(byte *data, int len);
 	void SendData(byte *data, int len);
+	void KeepPackage(bool bSend, byte *data, int len);
 
 public:
 	CClientTcp(CGameMgr *mgr);

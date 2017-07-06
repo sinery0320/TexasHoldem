@@ -78,7 +78,7 @@ void CClientTcp::OnReceive(int nErrorCode)
 
 	// Check error
 	if (m_nLen < CServerTcp::DATA_MIN_SIZE ||
-		m_nLen > CServerTcp::DATA_MAX_SIZE)
+		m_nLen >= CServerTcp::DATA_BUF_SIZE)
 	{
 		ASSERT(FALSE);
 		ResponseError(CServerTcp::DATA_ERR_SIZE);
@@ -101,6 +101,8 @@ void CClientTcp::OnReceive(int nErrorCode)
 	// Send to client
 	if (m_ResponseFun)
 		m_ResponseFun(m_pData, m_nLen);
+	else
+		ASSERT(FALSE);
 
 	CSocket::OnReceive(nErrorCode);
 }

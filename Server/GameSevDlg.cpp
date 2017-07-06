@@ -4,6 +4,7 @@
 #include "stdafx.h"
 #include "GameServer.h"
 #include "GameSevDlg.h"
+#include "Gbl.h"
 #include "afxdialogex.h"
 #include "Client.h"
 
@@ -20,7 +21,7 @@ IMPLEMENT_DYNAMIC(CGameSevDlg, CDialog)
 
 CGameSevDlg::CGameSevDlg(CWnd* pParent /*=NULL*/)
 	: CDialog(CGameSevDlg::IDD, pParent)
-	, m_nListenPort(23456)
+	, m_nListenPort(2345)
 {
 	m_pGameMgr = std::shared_ptr<Game::IGameMgr>(new Game::Texas::CTexasPokerMgr(this));
 }
@@ -44,6 +45,7 @@ BEGIN_MESSAGE_MAP(CGameSevDlg, CDialog)
 	ON_BN_CLICKED(IDC_BT_STARTGAME, &CGameSevDlg::OnBnClickedBtStartgame)
 	ON_WM_TIMER()
 	ON_BN_CLICKED(IDC_BT_RESTARTGAME, &CGameSevDlg::OnBnClickedBtRestartgame)
+	ON_BN_CLICKED(IDC_BT_EXPORT, &CGameSevDlg::OnBnClickedBtExport)
 END_MESSAGE_MAP()
 
 
@@ -90,21 +92,18 @@ void CGameSevDlg::OnStateChanged()
 		GetDlgItem(IDC_EDIT_LISTEN_PORT)->EnableWindow(TRUE);
 		GetDlgItem(IDC_BT_LISTEN)->EnableWindow(TRUE);
 		GetDlgItem(IDC_BT_STARTGAME)->EnableWindow(FALSE);
-		//GetDlgItem(IDC_BT_STARTGAME)->SetWindowText(_T("Start Game"));
 		break;
 
 	case Game::IGameMgr::SEV_LISTEN:
 		GetDlgItem(IDC_EDIT_LISTEN_PORT)->EnableWindow(FALSE);
 		GetDlgItem(IDC_BT_LISTEN)->EnableWindow(FALSE);
 		GetDlgItem(IDC_BT_STARTGAME)->EnableWindow(TRUE);
-		//GetDlgItem(IDC_BT_STARTGAME)->SetWindowText(_T("Start Game"));
 		break;
 
 	case Game::IGameMgr::SEV_START:
 		GetDlgItem(IDC_EDIT_LISTEN_PORT)->EnableWindow(FALSE);
 		GetDlgItem(IDC_BT_LISTEN)->EnableWindow(FALSE);
 		GetDlgItem(IDC_BT_STARTGAME)->EnableWindow(FALSE);
-		//GetDlgItem(IDC_BT_STARTGAME)->SetWindowText(_T("Stop Game"));
 		break;
 
 	default:
@@ -165,7 +164,7 @@ void CGameSevDlg::OnBnClickedBtStartgame()
 			m_ListCtrlClient.DeleteAllItems();
 			m_ListCtrlGame.DeleteAllItems();
 			SetTimer(1, 1000, NULL);
-			SetTimer(2, 50, NULL);
+			SetTimer(2, 10, NULL);
 		}
 		else
 		{
@@ -184,7 +183,7 @@ void CGameSevDlg::OnTimer(UINT_PTR nIDEvent)
 	}
 	else if (nIDEvent == 2)
 	{
-		m_pGameMgr->OnTimer100MillSec();
+		m_pGameMgr->OnTimer(nIDEvent);
 	}
 	CDialog::OnTimer(nIDEvent);
 }
@@ -193,4 +192,26 @@ void CGameSevDlg::OnTimer(UINT_PTR nIDEvent)
 void CGameSevDlg::OnBnClickedBtRestartgame()
 {
 	OnCancel();
+}
+
+
+void CGameSevDlg::OnBnClickedBtExport()
+{
+	// Get process string
+	CString strProcess;
+	m_pGameMgr->GetProcessInfo(strProcess);
+
+	// Save file
+	CString strPath = CGbl::GetMe().GetAppPath() + _T("Result.txt");
+	CFile file;
+
+	if (!file.Open(strPath, CFile::modeCreate | CFile::modeReadWrite))
+	{
+		MessageBox(_T("Save file failed!\r\n") + strPath, _T("Export"), MB_OK | MB_ICONERROR);
+		return;
+	}
+	file.Write(strProcess.GetBuffer(), strProcess.GetLength() * sizeof(TCHAR));
+	file.Close();
+
+	MessageBox(_T("Save file successful!\r\n") + strPath, _T("Export"), MB_OK | MB_ICONINFORMATION);
 }

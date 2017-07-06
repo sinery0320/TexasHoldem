@@ -40,7 +40,7 @@ namespace Game{
 			virtual void StopGame();
 			virtual void CreateClient(TCP::CClientTcp* tcp);
 			virtual void OnClientDisconnect(TCP::CClientTcp* tcp){ UNREFERENCED_PARAMETER(tcp); }
-			virtual void OnTimer100MillSec();
+			virtual void OnTimer2Work();
 
 		private:
 			virtual bool SendArtToClient();

@@ -55,9 +55,9 @@ void CAuctionMgr::StopGame()
 	m_nGameState = GM_IDEL;
 }
 
-void CAuctionMgr::OnTimer100MillSec()
+void CAuctionMgr::OnTimer2Work()
 {
-	bool bOK = true;
+	//bool bOK = true;
 	switch (m_nGameState)
 	{
 	case GM_IDEL:
@@ -65,12 +65,12 @@ void CAuctionMgr::OnTimer100MillSec()
 		break;
 
 	case GM_INIT:
-		for (std::shared_ptr<Game::IClient> pClient : m_ltClient)
-		{
-			if (!((Auction::CAuctionClient *)pClient.get())->SendInitRequest(m_ltArt.size(), m_ltClient.size()))
-				bOK = false;
-		}
-		if (bOK)  m_nGameState = GM_GAME;
+		//for (std::shared_ptr<Game::IClient> pClient : m_ltClient)
+		//{
+		//	if (!((Auction::CAuctionClient *)pClient.get())->SendInitRequest(m_ltArt.size(), m_ltClient.size()))
+		//		bOK = false;
+		//}
+		//if (bOK)  m_nGameState = GM_GAME;
 		break;
 
 	case GM_GAME:

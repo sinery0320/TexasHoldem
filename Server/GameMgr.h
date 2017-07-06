@@ -34,7 +34,7 @@ namespace Game{
 		int GetServerState(){ return m_nServerState; }
 
 	public:
-		void OnTimer100MSec();
+		void OnTimer(int nEventID);
 
 	public:
 		IGameMgr(CGameSevDlg *dlg);
@@ -45,16 +45,15 @@ namespace Game{
 		virtual bool StartGame();
 		virtual void StopGame();
 		virtual void OnGameOver();
+		virtual void GetProcessInfo(CString& strProcess){ UNREFERENCED_PARAMETER(strProcess); }
 
 		virtual void CreateClient(TCP::CClientTcp* tcp) = 0;
 		virtual void OnClientDisconnect(TCP::CClientTcp* tcp) = 0;
-		virtual void OnTimer100MillSec() = 0;
+		virtual void OnTimer2Work() = 0;
 		virtual void FillGrid(CListCtrl& lcClient, CListCtrl& lcGame){
 			UNREFERENCED_PARAMETER(lcClient);
 			UNREFERENCED_PARAMETER(lcGame);
 		}
-		virtual void ShowGameInfo(int gameID){
-			UNREFERENCED_PARAMETER(gameID);
-		}
+		virtual void ShowGameInfo(int gameID){ UNREFERENCED_PARAMETER(gameID); }
 	};
 }
