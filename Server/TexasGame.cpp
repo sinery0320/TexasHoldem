@@ -192,7 +192,9 @@ void CTexasGame::SendPoker()
 		}
 
 		vtpk[0] = GetRandPoker();
+		poker[vtpk[0]] = 1; // poker array not set
 		vtpk[1] = GetRandPoker();
+		poker[vtpk[1]] = 1; // poker array not set
 		client->SendPokerRequest(vtpk, m_nBankerID, GetGameID());
 		AddClientInfo(i, _T("opk:") + CTexasPokerResult::GetPokerString(m_vtOpenPoker, 3));
 		AddClientInfo(i, _T("pk:") + CTexasPokerResult::GetPokerString(client->GetPokers()));
