@@ -43,7 +43,7 @@ public:
 // This class is exported from the Player.dll
 class PLAYER_API CPlayer {
 private:
-	const IPlayerInfo *m_PlayerInfo;
+	IPlayerInfo *m_PlayerInfo;
 
 public:
 	CPlayer(IPlayerInfo *playerInfo):m_PlayerInfo(playerInfo){}

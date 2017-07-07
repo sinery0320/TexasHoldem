@@ -250,6 +250,8 @@ void CTexasPokerClient::SendPokerRequest(std::vector<byte> pokers, int banker, i
 	pData[8 + 3] = pokers[3];					// 
 	pData[8 + 4] = pokers[4];					// 
 	memcpy(m_poker, &pData[8 + 0], 5);			// Init pokers
+	m_strPokerHide = CTexasPokerResult::GetPokerString(m_poker, 2);
+	m_strPokerAll = CTexasPokerResult::GetPokerString(m_poker, 5);
 	*(int*)&pData[8 + 8] = banker;				// 
 	*(int*)&pData[8 + 12] = CTexasPokerMgr::GAME_DEFAULT_MONEY;	// 
 	*(int*)&pData[8 + 16] = gameid;				// 

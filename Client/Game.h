@@ -10,12 +10,15 @@ private:
 	int m_nBetMoney;	// How much money you bet in this game
 	byte m_Poker[5];	// First 2 pokers are mine, next 3 are the open pokers
 	CString m_strResultInfo;	// Content many information
+	CString m_strPokerHide;
+	CString m_strPokerOpen;
+	CString m_strPokerAll;
 	std::list<int> m_ltWinID;	// Winners id list
 
 public:
 	void SetID(int id){ m_nGameID = id; }
 	void SetBankerID(int bankerID){ m_nBankerID = bankerID; }
-	void SetPoker(byte *data){ memcpy(m_Poker, data, 5); }
+	void SetPoker(byte *data);// { memcpy(m_Poker, data, 5); }
 	void SetBetMoney(int money){ m_nBetMoney = money; }
 	void AddWinID(int id){ m_ltWinID.push_back(id); }
 

@@ -19,11 +19,11 @@ namespace Game{
 				GM_SENDRESULT,
 				GM_END,
 
-				GAME_MAX = 100,
+				GAME_MAX = 200,
 				GAME_MIN_MONEY = 10,
 				GAME_DEFAULT_MONEY = 10,
 				GAME_UNIT_MONEY = 10,
-				GAME_CLIENT_MONEY_DEF = 1000,
+				GAME_CLIENT_MONEY_DEF = 5000,
 				GAME_OVERTIME_SEC = 5,
 			};
 		private:

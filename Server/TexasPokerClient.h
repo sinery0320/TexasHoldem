@@ -15,6 +15,8 @@ namespace Game{
 			int m_nBetMoney;		// Bet money in one game
 			bool m_bGiveUp;			// If give up this one game
 			byte m_poker[5];		// first 2 are hide, behind 3 are show
+			CString m_strPokerHide;
+			CString m_strPokerAll;
 			short m_nCurrentCmd;	// The current cmd id
 			CString m_strReason;	// Why you game over
 			//int m_nLoserNumber;		// Winner is -1
@@ -40,6 +42,8 @@ namespace Game{
 			int GetNumber(){ return m_nNumber; }
 			bool IsGiveUp(){ return m_bGiveUp; }
 			byte* GetPokers(){ return m_poker; }
+			CString GetPokerHide(){ return m_strPokerHide; }
+			CString GetPokerAll(){ return m_strPokerAll; }
 
 		public:
 			virtual void OnCheckOverTime();

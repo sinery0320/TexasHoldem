@@ -106,7 +106,7 @@ CString CTexasPokerResult::GetPokerString(byte* p, int count /* = 5 */)
 
 	// Sort value
 	std::list<byte> ltVal;
-	for (size_t i = 0; i < count; i++)
+	for (int i = 0; i < count; i++)
 	{
 		ltVal.push_back(p[i] % 12);
 	}

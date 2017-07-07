@@ -30,3 +30,5 @@
 #include <windows.h>
 
 #include <list>
+#include <vector>
+#include <map>

@@ -24,9 +24,9 @@ CString CGame::GetInfoStr()
 	strInfo.Format(_T("bid:%d, betmoney:%d, hp:%s, sp:%s, ap:%s"),
 		m_nBankerID,
 		m_nBetMoney,
-		CPokerResult::GetPokerString(m_Poker, 2),
-		CPokerResult::GetPokerString(&m_Poker[2], 3),
-		CPokerResult::GetPokerString(m_Poker, 5));
+		m_strPokerHide,//CPokerResult::GetPokerString(m_Poker, 2),
+		m_strPokerOpen,//CPokerResult::GetPokerString(&m_Poker[2], 3),
+		m_strPokerAll); //CPokerResult::GetPokerString(m_Poker, 5));
 	if (!m_ltWinID.empty())
 	{
 		strInfo += _T(", wid:");
@@ -39,6 +39,14 @@ CString CGame::GetInfoStr()
 		strInfo = strInfo.Left(strInfo.GetLength() - 1);
 	}
 	return strInfo;
+}
+
+void CGame::SetPoker(byte *data)
+{
+	memcpy(m_Poker, data, 5);
+	m_strPokerHide = CPokerResult::GetPokerString(data, 2);
+	m_strPokerOpen = CPokerResult::GetPokerString(&data[2], 3);
+	m_strPokerAll = CPokerResult::GetPokerString(data, 5);
 }
 
 int CGame::GetBetMoney(int nMaxBet, int nPrevBet, int nMyBet, int nTotal, std::map<int, int> mpBetMoney)
@@ -60,15 +68,15 @@ void CGame::SetResultInfo(CString strInfo)
 
 CString CGame::GetPokersHide()
 {
-	return CPokerResult::GetPokerString(m_Poker, 2);
+	return m_strPokerHide; // CPokerResult::GetPokerString(m_Poker, 2);
 }
 
 CString CGame::GetPokersOpen()
 {
-	return CPokerResult::GetPokerString(&m_Poker[2], 3);
+	return m_strPokerOpen; // CPokerResult::GetPokerString(&m_Poker[2], 3);
 }
 
 CString CGame::GetPokersAll()
 {
-	return CPokerResult::GetPokerString(m_Poker, 5);
+	return m_strPokerAll; // CPokerResult::GetPokerString(m_Poker, 5);
 }

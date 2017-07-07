@@ -11,7 +11,10 @@
 CString CPlayer::GetName()
 {
 	//! Enter your name
-	return _T("AI0");
+	return _T("AI0-AlwaysFollow");
+	//return _T("AI1-Bet30FirstAndFollow");
+	//return _T("AI2-AlwaysGiveup");
+	//return _T("AI3-CleverOne");
 }
 
 // It's a event at first time
@@ -65,17 +68,109 @@ int CPlayer::RequireBetMoney(int nMax, int nPrevBet, int nMyBet, int nTotal, CSt
 		If all players bet the same money (except losers and give ups), server will open all pokers, the biggest will get all money.
 		If all players give up or lose game, only one left, that guy will get all money, but you can't get his pokers.
 	*/
+	IGame *game = m_PlayerInfo->GetCurrentGame();
+	int nDeltaBet = -1;
+	if (GetName().Find(_T("AI0")) == 0)
+	{
+		// AI0 code: only bet the same as previous
+		nDeltaBet = nPrevBet - nMyBet;
+		if (nMyBet < 60)	nDeltaBet += 20;
 
-	// AI0 code: only bet the same as previous
-	return nPrevBet - nMyBet;
+		if ((nDeltaBet + nMyBet) > nMax)
+			nDeltaBet = nMax - nMyBet;
+	}
+	else if (GetName().Find(_T("AI1")) == 0)
+	{
+		// AI1 code: bet 30 at first time, so we can see two round of betting
+		nDeltaBet = nPrevBet - nMyBet;
+		if (nDeltaBet == 10)		nDeltaBet = 20;
+		if (nMyBet < 80)			nDeltaBet += 30;
 
-	// AI1 code: bet 30 at first time, so we can see two round of betting
-	int nDeltaBet = nPrevBet - nMyBet;
-	if (nDeltaBet == 10)	nDeltaBet = 30;
+
+		if ((nDeltaBet + nMyBet) > nMax)
+			nDeltaBet = nMax - nMyBet;
+		return nDeltaBet;
+	}
+	else if (GetName().Find(_T("AI2")) == 0)
+	{
+		// AI2 code: give up every time
+	}
+	else if (GetName().Find(_T("AI3")) == 0)
+	{
+		// AI3 code: Clever one
+		int myValue = -1;
+		CString strPokers = game->GetPokersAll();
+		if (strPokers.Right(1) == _T("s"))		myValue = 4;
+		else
+		{
+			strPokers.Remove(_T('o'));
+			std::map<TCHAR, int> mpV;
+			for (int i = 0; i < 5; i++)
+			{
+				TCHAR pch = strPokers.GetAt(i);
+				if (mpV.find(pch) != mpV.end())
+				{
+					mpV[pch]++;
+				}
+				else
+				{
+					mpV[pch] = 1;
+				}
+			}
+			if (mpV.size() != 5)
+			{
+				std::list<int> ltVal;
+				for (auto iter : mpV)
+				{
+					ltVal.push_back(iter.second);
+				}
+				ltVal.sort();
+				if (ltVal.size() == 2)
+				{
+					if (ltVal.back() == 4)
+						myValue = 2;
+					else
+						myValue = 3;
+				}
+				else if (ltVal.size() == 4)
+					myValue = 7;
+				else
+				{
+					if (ltVal.back() == 3)
+						myValue = 5;
+					else
+						myValue = 6;
+				}
+			}
+		}
+
+		int nMaxBet = nMax - (nMax % m_PlayerInfo->GetBetUnitMoney());
+		switch (myValue)
+		{
+		case 1:
+		case 2:
+		case 3:
+		case 4:
+			nDeltaBet = nMax - nMyBet;
+			break;
+		case 5:
+			nDeltaBet = 200 - nMyBet;
+			if (nDeltaBet > (nMax - nMyBet))	nDeltaBet = nMax - nMyBet;
+			if (nDeltaBet < (nPrevBet - nMyBet))nDeltaBet = -1;
+			if (nDeltaBet < 0)					nDeltaBet = -1;
+			break;
+		case 6:
+			nDeltaBet = 140 - nMyBet;
+			if (nDeltaBet >(nMax - nMyBet))	nDeltaBet = nMax - nMyBet;
+			if (nDeltaBet < (nPrevBet - nMyBet))nDeltaBet = -1;
+			if (nDeltaBet < 0)					nDeltaBet = -1;
+			break;
+		case 7:
+		default:
+			nDeltaBet = -1;
+		}
+	}
 	return nDeltaBet;
-
-	// AI2 code: give up every time
-	return -1;
 }
 
 // When one game over
