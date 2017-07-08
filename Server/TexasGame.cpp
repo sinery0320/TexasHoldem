@@ -400,10 +400,11 @@ int CTexasGame::GetPrevID(int nID)
 		if (!client->IsClientGameOver() && !client->IsGiveUp())
 			return nPrevID;
 
-		nPrevID--;
 
 		if (nPrevID == nID)
 			return -1;
+
+		nPrevID--;
 	}
 	return -1;
 }
