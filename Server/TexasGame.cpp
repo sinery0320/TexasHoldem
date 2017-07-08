@@ -115,6 +115,8 @@ void CTexasGame::PlayGame()
 			int nCheck = CheckBetOver();
 			switch (nCheck)
 			{
+			// Murphy added
+			case -1:m_nCurClientID = m_nBankerID; m_nGameState = PS_GIVE_RESULT_HIDE; break;
 			case 0:	m_nCurClientID = GetNextID(m_nCurClientID); m_nGameState = PS_SEND_BET; break;
 			case 1: m_nGameState = PS_GIVE_RESULT_HIDE; break;
 			case 2: m_nGameState = PS_GIVE_RESULT_SHOW; break;
@@ -210,6 +212,13 @@ void CTexasGame::SendPoker()
 // Send bet request
 void CTexasGame::SendBet()
 {
+	// Murphy Added
+	if (m_nCurClientID < 0)
+	{
+		m_nGameState = PS_GIVE_RESULT_WAIT;
+		return;
+	}
+
 	ASSERT(m_nCurClientID >= 0);
 	auto pClient = m_Mgr->m_vtClient[m_nCurClientID];
 	auto client = (CTexasPokerClient *)pClient.get();
@@ -347,7 +356,7 @@ bool CTexasGame::CheckGameOver()
 	return false;	
 }
 
-// 0-not over, 1-over and only one player alive, 2-over and multi player alive
+// -1-over but all player died, 0-not over, 1-over and only one player alive, 2-over and multi player alive
 int CTexasGame::CheckBetOver()
 {
 	int nMoney = -1;
@@ -366,7 +375,13 @@ int CTexasGame::CheckBetOver()
 			{
 				return 0;
 			}
+			}
 		}
+
+	// Murphy Added
+	if (nMoney == -1)
+	{
+		return -1;
 	}
 
 	return 2;
@@ -406,10 +421,11 @@ int CTexasGame::GetNextID(int nID)
 		if (!client->IsClientGameOver() && !client->IsGiveUp())
 			return nNextID;
 
-		nNextID++;
-
 		if (nNextID == nID)
 			return -1;
+		
+		// Murphy modified.
+		nNextID++;
 	}
 	return -1;
 }
