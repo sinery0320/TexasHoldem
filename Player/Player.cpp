@@ -180,6 +180,11 @@ void CPlayer::OnOneGameOver(bool bIfWin, int nWinMoney, CString strResultInfo)
 		- bIfWin: true means you will this game
 		- nWinMoney: the money that every winner will get
 		- strResultInfo: you can get many information from this string, if result is open, you can see every one's pokers who is not give up
+			-id: Player id
+			-bet: The bet money that player have bet 
+			-gg: If give up, 1 is give up
+			-win: If win the game, 1 is win
+			-hpk: The hide pokers of this player, value is 0~51
 	*/
 }
 

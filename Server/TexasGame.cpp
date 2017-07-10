@@ -273,9 +273,9 @@ void CTexasGame::SendResult(bool bShow)
 
 		if (bShow && !client->IsClientGameOver())
 		{
-			//CString s = _T(",pk:%") + client->GetPokerHide();
-			//s.Format(_T(",pk:%s"), CTexasPokerResult::GetPokerString(client->GetPokers(), 2));
-			str = str + _T(",pk:%") + client->GetPokerHide();
+			CString s;
+			s.Format(_T(",hpk:%d-%d"), client->GetPokers()[0], client->GetPokers()[1]);
+			str = str + s;
 		}
 		strAllBet = strAllBet + str + _T("\r\n");
 	}
@@ -419,7 +419,7 @@ int CTexasGame::GetNextID(int nID)
 
 		auto pClient = m_Mgr->m_vtClient[nNextID];
 		auto client = (CTexasPokerClient *)pClient.get();
-		if (!client->IsClientGameOver() && !client->IsGiveUp())
+		if (!client->IsClientGameOver() /*&& !client->IsGiveUp()*/)
 			return nNextID;
 
 		if (nNextID == nID)
@@ -442,7 +442,7 @@ int CTexasGame::GetMaxBetMoney()
 	do
 	{
 		CTexasPokerClient *client = (CTexasPokerClient *)m_Mgr->m_vtClient[i].get();
-		if (!client->IsClientGameOver())
+		if (!client->IsClientGameOver() && !client->IsGiveUp())
 		{
 			if (nMax > ((client->GetCurrentMoney() + client->GetBetMoney())))
 				nMax = (client->GetCurrentMoney() + client->GetBetMoney());

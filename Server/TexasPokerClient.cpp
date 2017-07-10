@@ -156,7 +156,8 @@ void CTexasPokerClient::OnCmdRespond(byte *pData, int count)
 
 	case CMD_BET:
 		ChangeState(IGameMgr::REQ_DONE);
-		OnBet(&pData[8], count - 8);
+		if (!IsGiveUp())
+			OnBet(&pData[8], count - 8);
 		break;
 
 	case CMD_GIVERESULT:
