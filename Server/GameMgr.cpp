@@ -18,6 +18,11 @@ IGameMgr::~IGameMgr()
 {
 }
 
+bool IGameMgr::IfCheckOverTime()
+{
+	return m_Dlg->IsCheckOverTime() ? true : false;
+}
+
 bool IGameMgr::StartListen(unsigned short wPort)
 {
 	if (m_nServerState != SEV_IDEL)	return false;

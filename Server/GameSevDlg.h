@@ -23,9 +23,11 @@ private:
 	int m_nListenPort;
 	CListCtrl m_ListCtrlClient;
 	CListCtrl m_ListCtrlGame;
+	BOOL m_ckIsOverTime;
 
 public:
 	std::shared_ptr<Game::IGameMgr> GetGameMgr(){ return m_pGameMgr; }
+	BOOL IsCheckOverTime(){ return m_ckIsOverTime; }
 
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
@@ -44,4 +46,5 @@ public:
 	afx_msg void OnTimer(UINT_PTR nIDEvent);
 	afx_msg void OnBnClickedBtRestartgame();
 	afx_msg void OnBnClickedBtExport();
+	afx_msg void OnBnClickedCkOvertime();
 };

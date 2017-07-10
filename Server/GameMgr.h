@@ -35,6 +35,7 @@ namespace Game{
 
 	public:
 		void OnTimer(int nEventID);
+		bool IfCheckOverTime();
 
 	public:
 		IGameMgr(CGameSevDlg *dlg);

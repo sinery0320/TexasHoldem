@@ -22,6 +22,7 @@ IMPLEMENT_DYNAMIC(CGameSevDlg, CDialog)
 CGameSevDlg::CGameSevDlg(CWnd* pParent /*=NULL*/)
 	: CDialog(CGameSevDlg::IDD, pParent)
 	, m_nListenPort(2345)
+	, m_ckIsOverTime(TRUE)
 {
 	m_pGameMgr = std::shared_ptr<Game::IGameMgr>(new Game::Texas::CTexasPokerMgr(this));
 }
@@ -36,6 +37,7 @@ void CGameSevDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Text(pDX, IDC_EDIT_LISTEN_PORT, m_nListenPort);
 	DDX_Control(pDX, IDC_LIST_CLIENT, m_ListCtrlClient);
 	DDX_Control(pDX, IDC_LIST_GAME, m_ListCtrlGame);
+	DDX_Check(pDX, IDC_CK_OVERTIME, m_ckIsOverTime);
 }
 
 BEGIN_MESSAGE_MAP(CGameSevDlg, CDialog)
@@ -46,6 +48,7 @@ BEGIN_MESSAGE_MAP(CGameSevDlg, CDialog)
 	ON_WM_TIMER()
 	ON_BN_CLICKED(IDC_BT_RESTARTGAME, &CGameSevDlg::OnBnClickedBtRestartgame)
 	ON_BN_CLICKED(IDC_BT_EXPORT, &CGameSevDlg::OnBnClickedBtExport)
+	ON_BN_CLICKED(IDC_CK_OVERTIME, &CGameSevDlg::OnBnClickedCkOvertime)
 END_MESSAGE_MAP()
 
 
@@ -214,4 +217,10 @@ void CGameSevDlg::OnBnClickedBtExport()
 	file.Close();
 
 	MessageBox(_T("Save file successful!\r\n") + strPath, _T("Export"), MB_OK | MB_ICONINFORMATION);
+}
+
+
+void CGameSevDlg::OnBnClickedCkOvertime()
+{
+	UpdateData(TRUE);
 }

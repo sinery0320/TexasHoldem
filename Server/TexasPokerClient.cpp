@@ -61,6 +61,8 @@ void CTexasPokerClient::CheckGameOver()
 
 void CTexasPokerClient::OnCheckOverTime()
 {
+	if (!m_Mgr->IfCheckOverTime())
+		return;
 	if (m_nClientGameState == IGameMgr::REQ_WAIT)
 	{
 		SYSTEMTIME stNow;

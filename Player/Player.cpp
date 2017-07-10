@@ -11,10 +11,10 @@
 CString CPlayer::GetName()
 {
 	//! Enter your name
-	return _T("AI0-AlwaysFollow");
+	//return _T("AI0-AlwaysFollow");
 	//return _T("AI1-Bet30FirstAndFollow");
 	//return _T("AI2-AlwaysGiveup");
-	//return _T("AI3-CleverOne");
+	return _T("AI3-CleverOne");
 }
 
 // It's a event at first time
@@ -154,13 +154,20 @@ int CPlayer::RequireBetMoney(int nMax, int nPrevBet, int nMyBet, int nTotal, CSt
 			nDeltaBet = nMax - nMyBet;
 			break;
 		case 5:
-			nDeltaBet = 200 - nMyBet;
+			if (nMyBet < 150)
+				nDeltaBet = 150 - nMyBet;
+			else if (nMyBet < 220)
+				nDeltaBet = nPrevBet - nMyBet;
 			if (nDeltaBet > (nMax - nMyBet))	nDeltaBet = nMax - nMyBet;
 			if (nDeltaBet < (nPrevBet - nMyBet))nDeltaBet = -1;
 			if (nDeltaBet < 0)					nDeltaBet = -1;
 			break;
 		case 6:
 			nDeltaBet = 140 - nMyBet;
+			if (nMyBet < 100)
+				nDeltaBet = 100 - nMyBet;
+			else if (nMyBet < 160)
+				nDeltaBet = nPrevBet - nMyBet;
 			if (nDeltaBet >(nMax - nMyBet))	nDeltaBet = nMax - nMyBet;
 			if (nDeltaBet < (nPrevBet - nMyBet))nDeltaBet = -1;
 			if (nDeltaBet < 0)					nDeltaBet = -1;
