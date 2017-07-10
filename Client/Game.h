@@ -30,7 +30,7 @@ public:
 	virtual CString GetPokersOpen();
 	virtual CString GetPokersAll();
 	virtual CString GetResultInfo(){ return m_strResultInfo; }
-	virtual std::list<int> GetWinners(){ return m_ltWinID; }
+	virtual bool IfPlayerWin(int id);	// To check if this player win this one game
 
 public:
 	CGame(CGameMgr *mgr, int id);

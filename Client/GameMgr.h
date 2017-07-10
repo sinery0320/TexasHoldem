@@ -24,7 +24,7 @@ public:
 	void SetTotalMoney(int money){ m_nTotalMoney = money; m_nCurrentMoney = money; }
 	void SetBetUnit(int money){ m_nBetUnitMoney = money; }
 	void ClearPackage(){ m_strPackage.Empty(); }
-	void AddPackage(CString strPack){ m_strPackage = m_strPackage + strPack + _T("\r\n"); }
+	void AddPackage(CString& strPack){ m_strPackage = m_strPackage + strPack + _T("\r\n"); }
 
 	std::shared_ptr<CGame> CurrentGame(){ std::shared_ptr<CGame> e; if (m_vtGame.empty()) return e; return m_vtGame.back(); }
 	CClientDlg *GetDlg(){ return m_pDlg; }

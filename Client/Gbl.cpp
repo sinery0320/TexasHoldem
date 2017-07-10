@@ -11,7 +11,7 @@ CGbl::~CGbl()
 {
 }
 
-void CGbl::SpliteBy(CString text, CString rule, std::vector<CString>& vtStr)
+void CGbl::SpliteBy(CString& text, CString rule, std::vector<CString>& vtStr)
 {
 	int pos = 0;
 	vtStr.clear();

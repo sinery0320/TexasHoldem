@@ -19,13 +19,13 @@ public:
 	IGame(void){}
 	virtual int GetGameID() = 0;			// Game id, from 0
 	virtual int GetBankerID() = 0;			// Banker ID in one game
-	virtual int GetBetMoney() = 0;			// All bet money in one game, currently
-	virtual byte* GetPoker(int& count) = 0;	// Your pokers, count must be 5
+	virtual int GetBetMoney() = 0;			// All money you have bet in one game, currently
+	virtual byte* GetPoker(int& count) = 0;	// Your pokers, count must be 5, value will be 0~51, 0-2,..., 8-T, 9-J, 10-Q, 11-K, 12-A
 	virtual CString GetPokersHide() = 0;	// Get poker string, for hide pokers
 	virtual CString GetPokersOpen() = 0;	// Get poker string, for open pokers
-	virtual CString GetPokersAll() = 0;		// Get poker string, for all your pokers
+	virtual CString GetPokersAll() = 0;		// Get poker string, for all your pokers, o-not same color, s-same color
 	virtual CString GetResultInfo() = 0;	// Content many information which need you analyze
-	virtual std::list<int> GetWinners() = 0;// When this game over, you can know who (Player ID) win this game
+	virtual bool IfPlayerWin(int id) = 0;	// To check if this player win this one game
 };
 
 class PLAYER_API IPlayerInfo{

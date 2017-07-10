@@ -45,26 +45,35 @@ BOOL CClientTcp::ConnectTo(CString strIP, UINT uiPort)
 struct SPack{
 	int len;
 	byte *p;
-	SPack(int unitLen){
-		p = new byte[unitLen];
-		ZeroMemory(p, unitLen);
+	SPack(int l){
+		p = new byte[l];
+		len = l;
+		ZeroMemory(p, l);
 	}
-	~SPack(){ delete[] p; p = NULL; }
+	~SPack(){
+		delete[] p;
+		p = NULL;
+	}
 };
 
 void CClientTcp::OnReceive(int nErrorCode)
 {
-	int unitLen = 1024, allLen = 0, index = 0;
+	int allLen = 0, index = 0;
 
 	std::list<std::shared_ptr<SPack>> ltPack;
 	while (true)
 	{
-		std::shared_ptr<SPack> sp = std::shared_ptr<SPack>(new SPack(unitLen));
-		sp->len = Receive(sp->p, unitLen);
-		if (sp->len <= 0)		break;
-		allLen += sp->len;
+		byte pRcv[1024] = { 0 };
+		int len = Receive(pRcv, 1024);
+
+		std::shared_ptr<SPack> sp = std::shared_ptr<SPack>(new SPack(len));
+		memcpy(sp->p, pRcv, len);
+		if (len <= 0)		break;
+		allLen += len;
 		ltPack.push_back(sp);
-		if (sp->len < unitLen)	break;	// finish reading
+		if (len < 1024)
+			break;	// finish reading
+		int i = 5;
 	}
 	if (allLen <= 0)			return;
 
@@ -130,6 +139,7 @@ void CClientTcp::OnReceive(int nErrorCode)
 		break;
 	}
 
+	ltPack.clear();
 	delete[] pData;
 	CSocket::OnReceive(nErrorCode);
 }
@@ -259,7 +269,8 @@ void CClientTcp::SendData(byte *data, int len)
 
 void CClientTcp::KeepPackage(bool bSend, byte *data, int len)
 {
-	CString strOut = CGbl::GetCurrentTimeStr();
+#ifdef _DEBUG
+	/*CString strOut = CGbl::GetCurrentTimeStr();
 	strOut += bSend ? _T(" -> ") : _T(" <- ");
 	CString str;
 	for (int i = 0; i < len; i++)
@@ -267,5 +278,6 @@ void CClientTcp::KeepPackage(bool bSend, byte *data, int len)
 		str.Format(_T("%.2X "), data[i]);
 		strOut += str;
 	}
-	m_Mgr->AddPackage(strOut);
+	m_Mgr->AddPackage(strOut);*/
+#endif
 }

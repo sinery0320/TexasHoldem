@@ -174,6 +174,13 @@ void CTexasPokerClient::OnCmdRespond(byte *pData, int count)
 		ASSERT(FALSE);
 		break;
 	}
+
+	if (m_nClientGameState == IGameMgr::REQ_DONE)
+	{
+		auto game = m_Mgr->GetCurrentGame();
+		if (game)
+			game->PlayGame();
+	}
 }
 
 void CTexasPokerClient::OnBet(byte *data, int len)

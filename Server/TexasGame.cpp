@@ -231,6 +231,11 @@ void CTexasGame::SendBet()
 	int nYourBet = client->GetBetMoney();
 	//CString strAllBet = GetAllBet();
 
+	if (client->IsGiveUp())
+	{
+		nMax = 0;
+	}
+
 	// init bet string
 	CString strAllBet = _T(""), str;
 	for (std::shared_ptr<IClient> pClient : m_Mgr->m_vtClient)

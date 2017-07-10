@@ -50,6 +50,7 @@ int CPlayer::RequireBetMoney(int nMax, int nPrevBet, int nMyBet, int nTotal, CSt
 {
 	/*	Parameter description
 		- nMax: Your all bet money must not be bigger than this value, that means (the value you return + nMyBet) must <= (nMax), otherwise you will lost the game
+				If this value is 0, means you have gave up, the return value should be 0 (Sever don't care), you can see the strAllBet to see the bet information
 		- nPrevBet: The all bet money previous player gave in this game, if your id is 5, the player whose id is 4 is your previous, if your id is 0, 7 will be previous (if there are 8 palyers)
 					(The money you return + nMyBet) must >= (nPrevBet)
 		- nMyBet: The money you have bet in this game

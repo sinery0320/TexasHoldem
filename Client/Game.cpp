@@ -63,6 +63,43 @@ int CGame::GetBetMoney(int nMaxBet, int nPrevBet, int nMyBet, int nTotal, std::m
 
 void CGame::SetResultInfo(CString strInfo)
 {
+	m_ltWinID.clear();
+	std::vector<CString> vtLine;
+	CGbl::SpliteBy(strInfo, _T("\r\n"), vtLine);
+	for (int i = 0; i < (int)vtLine.size(); i++)
+	{
+		CString strLine = vtLine[i].Trim();
+		if (strLine.IsEmpty())	continue;
+		std::vector<CString> vtInfo;
+		CGbl::SpliteBy(strLine, _T(","), vtInfo);
+
+		int id = -1;
+		for (int j = 0; j < (int)vtInfo.size(); j++)
+		{
+			CString strKV = vtInfo[j].Trim();
+			if (strKV.IsEmpty())	continue;
+
+			std::vector<CString> vtKV;
+			CGbl::SpliteBy(strKV, _T(":"), vtKV);
+			if (vtKV.size() != 2)	continue;
+
+			CString strK = vtKV[0].Trim();
+			CString strV = vtKV[1].Trim();
+
+			if (strK == _T("id"))
+			{
+				id = _ttoi(strV);
+			}
+			else if (strK == _T("win"))
+			{
+				if (id != -1 && strV == _T("1"))
+				{
+					AddWinID(id);
+				}
+			}
+		}
+	}
+
 	m_strResultInfo = strInfo;
 }
 
@@ -79,4 +116,14 @@ CString CGame::GetPokersOpen()
 CString CGame::GetPokersAll()
 {
 	return m_strPokerAll; // CPokerResult::GetPokerString(m_Poker, 5);
+}
+
+bool CGame::IfPlayerWin(int id)	// To check if this player win this one game
+{
+	for (auto iter = m_ltWinID.begin(); iter != m_ltWinID.end(); iter++)
+	{
+		if (id == *iter)
+			return true;
+	}
+	return false;
 }
