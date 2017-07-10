@@ -45,7 +45,7 @@ public:
 	CGameMgr(CClientDlg *dlg);
 	~CGameMgr();
 
-	void Init();
+	bool Init();
 	BOOL StartGame(int nIP, int nPort);
 	BOOL StopGame();
 	std::shared_ptr<CGame> CreateNewGame();

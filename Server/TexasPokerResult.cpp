@@ -135,8 +135,8 @@ CString CTexasPokerResult::GetPokerString(byte* p, int count /* = 5 */)
 
 		if (bSameColor)
 		{
-			if (nColor == (byte)255)				nColor = (byte)(p[i] / 12);
-			else if (nColor != (byte)(p[i] / 12))	bSameColor = false;
+			if (nColor == (byte)255)				nColor = (byte)(p[i] / 13);
+			else if (nColor != (byte)(p[i] / 13))	bSameColor = false;
 		}
 		i++;
 	}

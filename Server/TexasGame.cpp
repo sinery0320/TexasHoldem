@@ -375,8 +375,8 @@ int CTexasGame::CheckBetOver()
 			{
 				return 0;
 			}
-			}
 		}
+	}
 
 	// Murphy Added
 	if (nMoney == -1)
@@ -434,9 +434,10 @@ int CTexasGame::GetNextID(int nID)
 // Get the max money that every player can bet
 int CTexasGame::GetMaxBetMoney()
 {
-	int nMax = 2147483647;	// 2^31 - 1
+	int nMax = 2147483647 - (2147483647 % CTexasPokerMgr::GAME_UNIT_MONEY);	// 2^31 - 1
 
 	//for (int i = m_nCurClientID; i != m_nBankerID;)
+	if (m_nCurClientID < 0)	return nMax;
 	int i = m_nCurClientID;
 	do
 	{
@@ -447,7 +448,7 @@ int CTexasGame::GetMaxBetMoney()
 				nMax = (client->GetCurrentMoney() + client->GetBetMoney());
 		}
 		i = GetNextID(i);
-	} while (i != m_nCurClientID);
+	} while (i != m_nCurClientID && i >= 0);
 	nMax -= (nMax % CTexasPokerMgr::GAME_UNIT_MONEY);
 	return nMax;
 }

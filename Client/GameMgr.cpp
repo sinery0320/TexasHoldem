@@ -23,7 +23,7 @@ CGameMgr::~CGameMgr()
 	StopGame();
 }
 
-void CGameMgr::Init()
+bool CGameMgr::Init()
 {
 	m_nID = -1;
 	m_nPlayerCount = 0;
@@ -33,6 +33,7 @@ void CGameMgr::Init()
 	//m_nBetMoney = 0;
 	m_vtGame.clear();
 	m_pDlg->ClearistCtrl();
+	return Player()->GetVer() == _T("1.2");
 }
 
 BOOL CGameMgr::StartGame(int nIP, int nPort)

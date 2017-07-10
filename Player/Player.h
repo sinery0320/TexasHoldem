@@ -12,6 +12,8 @@
 #define PLAYER_API __declspec(dllimport)
 #endif
 
+const CString STR_VERSION = _T("1.2");
+
 class PLAYER_API IGame{
 public:
 	IGame(void){}
@@ -47,6 +49,7 @@ private:
 
 public:
 	CPlayer(IPlayerInfo *playerInfo):m_PlayerInfo(playerInfo){}
+	CString GetVer()const { return STR_VERSION; }
 	CString GetName();						// Get your name
 	void OnInitPlayer();					// It's a event at first time
 	void OnOneGameBegin();					// When one game begin

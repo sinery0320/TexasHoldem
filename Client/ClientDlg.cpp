@@ -136,6 +136,13 @@ HCURSOR CClientDlg::OnQueryDragIcon()
 void CClientDlg::OnBnClickedOk()
 {
 	UpdateData(TRUE);
+	if (!m_pMgr->Init())
+	{
+		CString strError = _T("Start game failed, please check player version");
+		MessageBox(strError, _T("Error"), MB_OK | MB_ICONERROR);
+		return;
+	}
+
 	if (m_pMgr->StartGame(m_nIP, m_nPort))
 	{
 		GetDlgItem(IDC_IP_CTRL)->EnableWindow(FALSE);
